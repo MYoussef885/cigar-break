@@ -1,0 +1,120 @@
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0001", "name": "Read", "input": {"file_path": "/work/proj/src/core.py"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 72698, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0001", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 1}}
+{"type": "file-history-snapshot", "messageId": "m1", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0002", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 1", "new_string": "x = 2"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 72898, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0002", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 2}}
+{"type": "file-history-snapshot", "messageId": "m2", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0003", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 2", "new_string": "x = 1"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 73098, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0003", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 3}}
+{"type": "file-history-snapshot", "messageId": "m3", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0004", "name": "Grep", "input": {"pattern": "def run", "path": "/work/proj/src"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 73298, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0004", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 4}}
+{"type": "file-history-snapshot", "messageId": "m4", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0005", "name": "Bash", "input": {"command": "uv run pytest -q", "description": "Run tests"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 73498, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0005", "content": "Exit code 1\n3 failed", "is_error": true}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 5}}
+{"type": "file-history-snapshot", "messageId": "m5", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0006", "name": "Read", "input": {"file_path": "/work/proj/src/core.py"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 73698, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0006", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 6}}
+{"type": "file-history-snapshot", "messageId": "m6", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0007", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 1", "new_string": "x = 2"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 73898, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0007", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 7}}
+{"type": "file-history-snapshot", "messageId": "m7", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0008", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 2", "new_string": "x = 1"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 74098, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0008", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 8}}
+{"type": "file-history-snapshot", "messageId": "m8", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0009", "name": "Grep", "input": {"pattern": "def run", "path": "/work/proj/src"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 74298, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0009", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 9}}
+{"type": "file-history-snapshot", "messageId": "m9", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0010", "name": "Bash", "input": {"command": "uv run pytest -q", "description": "Run tests"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 74498, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0010", "content": "Exit code 1\n3 failed", "is_error": true}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 10}}
+{"type": "file-history-snapshot", "messageId": "m10", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0011", "name": "Read", "input": {"file_path": "/work/proj/src/core.py"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 74698, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0011", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 11}}
+{"type": "file-history-snapshot", "messageId": "m11", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0012", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 1", "new_string": "x = 2"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 74898, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0012", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 12}}
+{"type": "file-history-snapshot", "messageId": "m12", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0013", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 2", "new_string": "x = 1"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 75098, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0013", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 13}}
+{"type": "file-history-snapshot", "messageId": "m13", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0014", "name": "Grep", "input": {"pattern": "def run", "path": "/work/proj/src"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 75298, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0014", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 14}}
+{"type": "file-history-snapshot", "messageId": "m14", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0015", "name": "Bash", "input": {"command": "uv run pytest -q", "description": "Run tests"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 75498, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0015", "content": "Exit code 1\n3 failed", "is_error": true}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 15}}
+{"type": "file-history-snapshot", "messageId": "m15", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0016", "name": "Read", "input": {"file_path": "/work/proj/src/core.py"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 75698, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0016", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 16}}
+{"type": "file-history-snapshot", "messageId": "m16", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0017", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 1", "new_string": "x = 2"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 75898, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0017", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 17}}
+{"type": "file-history-snapshot", "messageId": "m17", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0018", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 2", "new_string": "x = 1"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 76098, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0018", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 18}}
+{"type": "file-history-snapshot", "messageId": "m18", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0019", "name": "Grep", "input": {"pattern": "def run", "path": "/work/proj/src"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 76298, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0019", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 19}}
+{"type": "file-history-snapshot", "messageId": "m19", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0020", "name": "Bash", "input": {"command": "uv run pytest -q", "description": "Run tests"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 76498, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0020", "content": "Exit code 1\n3 failed", "is_error": true}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 20}}
+{"type": "file-history-snapshot", "messageId": "m20", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0021", "name": "Read", "input": {"file_path": "/work/proj/src/core.py"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 76698, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0021", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 21}}
+{"type": "file-history-snapshot", "messageId": "m21", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0022", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 1", "new_string": "x = 2"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 76898, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0022", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 22}}
+{"type": "file-history-snapshot", "messageId": "m22", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0023", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 2", "new_string": "x = 1"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 77098, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0023", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 23}}
+{"type": "file-history-snapshot", "messageId": "m23", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0024", "name": "Grep", "input": {"pattern": "def run", "path": "/work/proj/src"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 77298, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0024", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 24}}
+{"type": "file-history-snapshot", "messageId": "m24", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0025", "name": "Bash", "input": {"command": "uv run pytest -q", "description": "Run tests"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 77498, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0025", "content": "Exit code 1\n3 failed", "is_error": true}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 25}}
+{"type": "file-history-snapshot", "messageId": "m25", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0026", "name": "Read", "input": {"file_path": "/work/proj/src/core.py"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 77698, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0026", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 26}}
+{"type": "file-history-snapshot", "messageId": "m26", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0027", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 1", "new_string": "x = 2"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 77898, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0027", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 27}}
+{"type": "file-history-snapshot", "messageId": "m27", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0028", "name": "Edit", "input": {"file_path": "/work/proj/src/core.py", "old_string": "x = 2", "new_string": "x = 1"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 78098, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0028", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 28}}
+{"type": "file-history-snapshot", "messageId": "m28", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0029", "name": "Grep", "input": {"pattern": "def run", "path": "/work/proj/src"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 78298, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0029", "content": "ok", "is_error": false}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 29}}
+{"type": "file-history-snapshot", "messageId": "m29", "snapshot": {}}
+{"type": "assistant", "isSidechain": false, "sessionId": "sess-1", "message": {"role": "assistant", "model": "claude-opus-5-5", "content": [{"type": "tool_use", "id": "toolu_0030", "name": "Bash", "input": {"command": "uv run pytest -q", "description": "Run tests"}}], "usage": {"input_tokens": 2, "cache_creation_input_tokens": 500, "cache_read_input_tokens": 78498, "output_tokens": 120}}}
+{"type": "user", "isSidechain": false, "message": {"role": "user", "content": [{"type": "tool_result", "tool_use_id": "toolu_0030", "content": "Exit code 1\n3 failed", "is_error": true}]}}
+{"type": "attachment", "attachment": {"type": "todo", "n": 30}}
+{"type": "file-history-snapshot", "messageId": "m30", "snapshot": {}}
