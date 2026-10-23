@@ -1,0 +1,9 @@
+$ uv run pytest tests/test_perf.py -s -q      # python3 on PATH is /usr/bin/python3 3.9.6 (this machine's default; the launcher re-execs 3.11)
+hook perf: 200 runs, transcript 5.0 MB, python3 on PATH = /usr/bin/python3 (3.9.6)
+  end to end (process start to exit): p50 74.0 ms, p95 76.3 ms, max 86.8 ms
+  inside the hook (parse, store, transcript, score): p50 2.3 ms, p95 2.9 ms
+
+$ PATH=<dir with python3 -> python3.11>:$PATH uv run pytest tests/test_perf.py -s -q      # no re-exec
+hook perf: 200 runs, transcript 5.0 MB, python3 on PATH = <scratch>/py311bin/python3 (3.11.15)
+  end to end (process start to exit): p50 26.1 ms, p95 27.3 ms, max 70.6 ms
+  inside the hook (parse, store, transcript, score): p50 2.1 ms, p95 2.3 ms

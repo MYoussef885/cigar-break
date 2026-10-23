@@ -1,0 +1,3 @@
+CLAUDE_PROJECT_DIR=<scratch>/proj
+CLAUDE_PLUGIN_ROOT=<scratch>/probe
+CLAUDE_PLUGIN_DATA=~/.claude/plugins/data/probe-inline

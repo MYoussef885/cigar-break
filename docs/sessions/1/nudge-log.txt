@@ -1,0 +1,11 @@
+# ~/.cigar/logs excerpt: nudges firing in the live end-to-end run (suggest mode)
+2026-10-24T00:51:55 pid=66955 nudge session=3aac3e78 level=1 trigger=b tokens=40570 knee=20000 pressure=2.0285 behavior=0.0 baseline=0.08 counts={}
+2026-10-24T00:53:56 pid=66540 take_break saved=.cigar/handoffs/2026-10-24T0053-3aac.md chars=1367 injected_chars=1458
+2026-10-24T00:53:57 pid=67146 break session=3aac3e78 tokens=41546 mode=suggest
+2026-10-24T00:55:33 pid=67335 restore session=86c1e69d source=clear chars=1458
+
+# Replay of tests/fixtures/transcripts (degrading, distress)
+2026-10-24T01:06:08 pid=70939 nudge session=degradin level=1 trigger=a tokens=110431 knee=100000 pressure=1.1043 behavior=0.225 baseline=0.08 counts={"check_fail": 1, "failure": 1, "repeat": 1, "undo": 2}
+2026-10-24T01:06:08 pid=70939 nudge session=degradin level=2 trigger=a tokens=133812 knee=100000 pressure=1.3381 behavior=1.0 baseline=0.08 counts={"check_fail": 4, "failure": 4, "repeat": 16, "undo": 8}
+2026-10-24T01:06:08 pid=70939 nudge session=degradin level=3 trigger=a tokens=157194 knee=100000 pressure=1.5719 behavior=1.0 baseline=0.08 counts={"check_fail": 4, "failure": 4, "repeat": 16, "undo": 8}
+2026-10-24T01:06:08 pid=70939 nudge session=distress level=1 trigger=c tokens=75000 knee=120000 pressure=0.625 behavior=0.96 baseline=0.08 counts={"check_fail": 2, "failure": 2, "repeat": 4, "undo": 3}
