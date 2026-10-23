@@ -109,6 +109,10 @@ def post_tool_use(payload: Payload, cfg: config.Config, failed: bool = False) ->
             return None
 
         reading = transcript.read_tail(payload.get("transcript_path"))
+        if reading is None:
+            logs.write(
+                f"transcript: no usage in tail session={sid[:8]}; using last known", cfg.home
+            )
         tokens = reading.context_tokens if reading else session.get("context_tokens")
         model = (reading.model if reading else None) or session.get("model_last")
         event_id = store.insert_event(sid, event, False, tokens, model)

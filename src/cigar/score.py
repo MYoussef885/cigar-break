@@ -74,11 +74,12 @@ def evaluate(
     fatigue += 0.5 * b / defaults.DISTRESS_BEHAVIOR
     trigger = None
     if context_tokens >= min_tokens:
-        if pressure >= defaults.PRESSURE_KNEE and b >= base + defaults.BEHAVIOR_MARGIN:
+        enough = len(window) >= defaults.MIN_WINDOW_EVENTS
+        if enough and pressure >= defaults.PRESSURE_KNEE and b >= base + defaults.BEHAVIOR_MARGIN:
             trigger = "a"
         elif pressure >= defaults.PRESSURE_HARD:
             trigger = "b"
-        elif b >= defaults.DISTRESS_BEHAVIOR and pressure >= defaults.DISTRESS_PRESSURE:
+        elif enough and b >= defaults.DISTRESS_BEHAVIOR and pressure >= defaults.DISTRESS_PRESSURE:
             trigger = "c"
     counts = Counter(s for signals in window for s in signals)
     return Score(

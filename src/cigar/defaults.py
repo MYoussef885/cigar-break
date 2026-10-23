@@ -11,6 +11,8 @@ import re
 
 # --- Signals (architecture §6) ---------------------------------------------
 WINDOW_EVENTS = 20
+# Rules (a) and (c) judge behavior only over at least this many events (D-020).
+MIN_WINDOW_EVENTS = 10
 UNDO_LOOKBACK_EVENTS = 50
 
 WEIGHTS: dict[str, float] = {
