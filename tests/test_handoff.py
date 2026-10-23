@@ -96,3 +96,11 @@ def test_load_refuses_paths_outside_handoffs(project: Path) -> None:
     assert handoff.load(project, "secret.txt") is None
     assert handoff.load(project, ".cigar/handoffs/../../secret.txt") is None
     assert handoff.load(project, ".cigar/handoffs/missing.md") is None
+
+
+def test_files_split_path_and_note_written_together() -> None:
+    # Seen in the Session 1 end-to-end run: the note was packed into the path.
+    h = handoff.validate(
+        dict(FULL, files=["/p/calc.py — add and mul", {"path": "/p/t.py — the tests"}])
+    )
+    assert h.files == (("/p/calc.py", "add and mul"), ("/p/t.py", "the tests"))

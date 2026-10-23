@@ -53,6 +53,13 @@ def _items(data: dict[str, Any], key: str) -> tuple[str, ...]:
     return tuple(v.strip() for v in value if v.strip())
 
 
+def _split_note(path: str, note: str) -> tuple[str, str]:
+    """Agents often write "path — note" in one string; keep the two apart."""
+    if not note and " — " in path:
+        path, note = (part.strip() for part in path.split(" — ", 1))
+    return path, note
+
+
 def _files(data: dict[str, Any]) -> tuple[tuple[str, str], ...]:
     value = data.get("files")
     if value is None:
@@ -62,10 +69,12 @@ def _files(data: dict[str, Any]) -> tuple[tuple[str, str], ...]:
     out = []
     for item in value:
         if isinstance(item, str) and item.strip():
-            out.append((item.strip(), ""))
+            out.append(_split_note(item.strip(), ""))
         elif isinstance(item, dict) and isinstance(item.get("path"), str) and item["path"].strip():
             note = item.get("note")
-            out.append((item["path"].strip(), note.strip() if isinstance(note, str) else ""))
+            out.append(
+                _split_note(item["path"].strip(), note.strip() if isinstance(note, str) else "")
+            )
         else:
             raise HandoffError("each entry of `files` needs a `path` string")
     return tuple(out)
