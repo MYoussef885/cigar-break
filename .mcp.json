@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "cigar": {
+      "command": "python3",
+      "args": [
+        "-I",
+        "-S",
+        "${CLAUDE_PLUGIN_ROOT}/bin/cigar-mcp"
+      ]
+    }
+  }
+}

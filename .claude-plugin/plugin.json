@@ -1,0 +1,9 @@
+{
+  "name": "cigar",
+  "version": "0.1.0-dev",
+  "description": "Notices when a long session starts to slip, saves a structured handoff, and restores it after /clear.",
+  "author": { "name": "Mohamed Youssef" },
+  "repository": "https://github.com/MYoussef885/cigar-break",
+  "license": "MIT",
+  "keywords": ["context", "handoff", "compaction", "session"]
+}
