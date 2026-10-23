@@ -5,6 +5,6 @@ argument-hint: "[suggest|observe|auto]"
 disable-model-invocation: true
 allowed-tools: Bash(python3:*)
 ---
-!`python3 "${CLAUDE_PLUGIN_ROOT}/bin/cigar" mode "$ARGUMENTS"`
+!`python3 "${CLAUDE_PLUGIN_ROOT}/bin/cigar" mode "$ARGUMENTS" 2>&1 || true`
 
 Show the output above to the developer exactly as printed, with no commentary.
