@@ -7,14 +7,12 @@ from typing import Any
 from cigar import config, defaults, score
 from cigar.store import Store
 
-AUTO_AVAILABLE = False  # D-007: no reliable way for a plugin to start a reset.
-
 
 def collect(
     store: Store, cfg: config.Config, session_id: str | None = None, project: str | None = None
 ) -> dict[str, Any]:
     session = store.get_session(session_id) if session_id else store.latest_session(project)
-    info: dict[str, Any] = {"mode": cfg.mode, "auto_available": AUTO_AVAILABLE, "session": None}
+    info: dict[str, Any] = {"mode": cfg.mode, "session": None}
     if project:
         latest = store.latest_handoff(project)
         info["latest_handoff"] = latest["path"] if latest else None
@@ -69,6 +67,6 @@ def render(info: dict[str, Any]) -> str:
         lines.append(f"Nudges: {s['nudges']} of {s['max_nudges']} · breaks: {s['breaks']}")
     if "pending_handoff" in info:
         lines.append(f"Pending handoff: {info['pending_handoff'] or 'none'}")
-    if info["mode"] == "auto" and not info["auto_available"]:
-        lines.append("Note: auto mode is unavailable in this version; behaving as suggest.")
+    if info["mode"] == "auto":
+        lines.append("Auto mode: after a handoff is saved, the context is cleared at turn end.")
     return "\n".join(lines)

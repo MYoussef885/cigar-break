@@ -146,7 +146,15 @@ def evidence(counts: dict[str, int], events: int) -> str:
     return f"In the last {events} tool calls: " + ", ".join(parts) + "."
 
 
-def render_nudge(score: Score, level: int, model: str | None) -> tuple[str, str]:
+AUTO_NOTE = (
+    " Cigar is in auto mode: once a handoff is saved, it clears the context at the end of this "
+    "turn and restores the handoff."
+)
+
+
+def render_nudge(
+    score: Score, level: int, model: str | None, auto: bool = False
+) -> tuple[str, str]:
     """(additionalContext for the agent, systemMessage for the developer). Facts only."""
     model_name = model or "this model"
     agent = (
@@ -154,11 +162,17 @@ def render_nudge(score: Score, level: int, model: str | None) -> tuple[str, str]
         f"the knee for {model_name} is ~{_k(score.knee)}. {evidence(score.counts, score.events)} "
         f"{_REASONS.get(score.trigger or 'b', _REASONS['b'])} "
         "The `take_break` tool (cigar MCP) saves a handoff so work can resume in a fresh context."
+        + (AUTO_NOTE if auto else "")
     )
     signals_total = sum(score.counts.values())
     developer = (
         f"🚬 Cigar: this session shows fatigue ({_k(score.context_tokens)} tokens, "
         f"{signals_total} signals in the last {score.events} calls). "
-        "Claude has been offered a break. Run /cigar:break to force one."
+        + (
+            "Claude has been offered a break; in auto mode the context resets once it saves a "
+            "handoff."
+            if auto
+            else "Claude has been offered a break. Run /cigar:break to force one."
+        )
     )
     return agent, developer

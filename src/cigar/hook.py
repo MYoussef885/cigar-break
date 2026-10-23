@@ -14,7 +14,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from cigar import config, defaults, logs, score, signals, transcript
+from cigar import auto, config, defaults, logs, score, signals, transcript
 from cigar.store import Store, project_hash
 
 Payload = dict[str, Any]
@@ -22,6 +22,9 @@ Output = dict[str, Any] | None
 
 NOTIFY_SEQUENCE = "\x1b]9;Cigar: this session shows fatigue\x07"
 STOP_REMINDER = "🚬 Handoff ready. Type /clear to take the break (or /compact to keep a summary)."
+STOP_REMINDER_AUTO = (
+    "🚬 Handoff ready. Cigar auto mode clears the context now; if it doesn't, type /clear."
+)
 
 
 def _project_dir(payload: Payload) -> Path:
@@ -51,6 +54,7 @@ def session_start(payload: Payload, cfg: config.Config) -> Output:
     project = project_hash(str(project_dir))
     with Store.open(cfg.db_path) as store:
         store.touch_session(sid, project, model=model, source=source)
+        auto.prune(cfg.home)
         if source not in ("clear", "compact"):
             logs.prune(cfg.home)
             return None
@@ -128,7 +132,9 @@ def post_tool_use(payload: Payload, cfg: config.Config, failed: bool = False) ->
             store.set_event_signals(event_id, (), 0.0)
             if tool.endswith("__take_break") and not event.failed:
                 store.record_break(sid)
-                logs.write(f"break session={sid[:8]} tokens={tokens}", cfg.home)
+                if cfg.mode == "auto":
+                    auto.mark_ready(cfg.home, sid)
+                logs.write(f"break session={sid[:8]} tokens={tokens} mode={cfg.mode}", cfg.home)
             return None
 
         history = store.recent_events(sid, defaults.UNDO_LOOKBACK_EVENTS, before_id=event_id)
@@ -159,7 +165,7 @@ def post_tool_use(payload: Payload, cfg: config.Config, failed: bool = False) ->
             return None
         store.record_nudge(sid, seq)
 
-    agent_text, developer_text = score.render_nudge(result, level, model)
+    agent_text, developer_text = score.render_nudge(result, level, model, cfg.mode == "auto")
     logs.write(
         f"nudge session={sid[:8]} level={level} trigger={result.trigger} "
         f"tokens={result.context_tokens} knee={result.knee} pressure={result.pressure} "
@@ -215,7 +221,7 @@ def stop(payload: Payload, cfg: config.Config) -> Output:
         if not session or not session.get("break_at") or session.get("reminded"):
             return None
         store.update_session(sid, reminded=1)
-    return {"systemMessage": STOP_REMINDER}
+    return {"systemMessage": STOP_REMINDER_AUTO if cfg.mode == "auto" else STOP_REMINDER}
 
 
 def session_end(payload: Payload, cfg: config.Config) -> Output:

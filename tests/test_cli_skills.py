@@ -11,18 +11,16 @@ from cigar import cli, config
 SKILLS = ROOT / "skills"
 
 
-def test_mode_show_set_and_refuse_auto(
-    cigar_home: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_mode_show_and_set(cigar_home: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert cli.main(["mode"]) == 0
     assert capsys.readouterr().out.startswith("Mode: suggest.")
     assert cli.main(["mode", "observe"]) == 0
     assert config.load().mode == "observe"
     assert cli.main(["mode", ""]) == 0  # the skill passes "$ARGUMENTS", maybe empty
     assert capsys.readouterr().out.splitlines()[-1].startswith("Mode: observe.")
-    assert cli.main(["mode", "auto"]) == 1
-    assert "Auto mode is unavailable" in capsys.readouterr().out
-    assert config.load().mode == "observe"
+    assert cli.main(["mode", "auto"]) == 0
+    assert "clears the context itself" in capsys.readouterr().out
+    assert config.load().mode == "auto"
     assert cli.main(["mode", "turbo"]) == 2
 
 

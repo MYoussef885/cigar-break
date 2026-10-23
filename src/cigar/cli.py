@@ -11,15 +11,14 @@ from pathlib import Path
 from cigar import __version__, config, status
 from cigar.store import Store, project_hash
 
-AUTO_UNAVAILABLE = (
-    "Auto mode is unavailable: in testing (D-007), a plugin could not start a /clear on the "
-    "developer's behalf, so Cigar can only suggest a break. Modes available: suggest, observe."
-)
-
 MODE_HELP = {
     "suggest": "Cigar nudges the agent and you when the session shows fatigue (default).",
     "observe": "Cigar records signals only, with no nudges.",
-    "auto": "Cigar would reset the context without you (only if supported).",
+    "auto": (
+        "After a handoff is saved, Cigar clears the context itself at the end of the turn and "
+        "restores the handoff. Needs plugin mods (Claude Code 2.1.287 or newer); tested in the "
+        "terminal CLI only."
+    ),
 }
 
 
@@ -43,9 +42,6 @@ def cmd_mode(args: argparse.Namespace) -> int:
         print(f"Unknown mode {mode!r}. Choose one of: {', '.join(config.MODES)}.")
         return 2
     args.mode = mode
-    if args.mode == "auto" and not status.AUTO_AVAILABLE:
-        print(AUTO_UNAVAILABLE)
-        return 1
     path = config.write_value(cfg.home, "mode", args.mode)
     note = ""
     if os.environ.get("CIGAR_MODE") and os.environ["CIGAR_MODE"] != args.mode:

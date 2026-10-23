@@ -230,3 +230,44 @@ def test_compaction_model_switch_and_end(project: Path, at_140k: Path) -> None:
     assert tuple(c) == ("auto", 140_000, "claude-sonnet-5-5")
     assert (session["model_last"], session["context_tokens"]) == ("claude-haiku-4-5", 38_637)
     assert session["ended_at"]
+
+
+def test_auto_mode_marks_ready_after_break(
+    project: Path, at_140k: Path, cigar_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from cigar import auto
+
+    monkeypatch.setenv("CIGAR_MODE", "auto")
+    data = json.loads(run_hook("post_tool_use", payload(project, at_140k))[1])
+    assert "Cigar is in auto mode" in data["hookSpecificOutput"]["additionalContext"]
+    assert "in auto mode the context resets" in data["systemMessage"]
+    marker = auto.marker_path(cigar_home, "sess-1")
+    assert not marker.exists()  # a nudge alone never resets
+    tb = payload(project, at_140k, tool_name="mcp__plugin_cigar_cigar__take_break", tool_input={})
+    run_hook("post_tool_use", tb)
+    assert json.loads(marker.read_text())["state"] == "ready"
+    stop = json.loads(run_hook("stop", {"session_id": "sess-1"})[1])
+    assert "auto mode clears the context" in stop["systemMessage"]
+
+
+def test_suggest_mode_never_writes_markers(project: Path, at_140k: Path, cigar_home: Path) -> None:
+    tb = payload(project, at_140k, tool_name="mcp__plugin_cigar_cigar__take_break", tool_input={})
+    run_hook("post_tool_use", tb)
+    assert not (cigar_home / "auto").exists()
+
+
+def test_auto_markers_are_pruned(cigar_home: Path) -> None:
+    import os
+
+    from cigar import auto
+
+    ready = auto.mark_ready(cigar_home, "a")
+    fired = auto.mark_ready(cigar_home, "b")
+    fired.write_text(json.dumps({"state": "fired"}))
+    old = auto.mark_ready(cigar_home, "c")
+    os.utime(old, (time.time() - 2 * 86400,) * 2)
+    broken = cigar_home / "auto" / "d.json"
+    broken.write_text("{nope")
+    auto.prune(cigar_home)
+    assert sorted(p.name for p in (cigar_home / "auto").iterdir()) == [ready.name]
+    assert auto.marker_path(cigar_home, "../../etc/x").parent == cigar_home / "auto"
