@@ -150,3 +150,16 @@ def test_project_resolution(
     assert not replies[0]["result"]["isError"]
     target = other if project_arg else project
     assert list((target / ".cigar" / "handoffs").glob("*.md"))
+
+
+def test_take_break_reply_in_auto_mode(cigar_home: Path, project: Path) -> None:
+    from cigar import config
+
+    config.write_value(cigar_home, "mode", "auto")
+    call = {"name": "take_break", "arguments": HANDOFF}
+    replies = raw_exchange(
+        [{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": call}], cigar_home, project
+    )
+    text = replies[0]["result"]["content"][0]["text"]
+    assert "auto mode: it clears the context when this turn ends" in text
+    assert "/clear" not in text

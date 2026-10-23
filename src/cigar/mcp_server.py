@@ -104,6 +104,12 @@ def tool_take_break(arguments: dict[str, Any], cfg: config.Config) -> str:
         store.add_handoff(project, session_id, rel_path)
     rendered = len(handoff.for_injection(markdown, rel_path))
     logs.write(f"take_break saved={rel_path} chars={len(markdown)} injected_chars={rendered}")
+    if cfg.mode == "auto":
+        return (
+            f"Handoff saved to {rel_path}. Cigar is in auto mode: it clears the context when "
+            "this turn ends and restores the handoff into the fresh session. Nothing for the "
+            "developer to type."
+        )
     return (
         f"Handoff saved to {rel_path}. When the developer types /clear, it will be restored "
         "automatically into the fresh session. What to tell the developer: type /clear for a "
