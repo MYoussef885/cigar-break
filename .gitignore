@@ -8,3 +8,5 @@ build/
 *.egg-info/
 tests/fixtures/private/
 .cigar/
+# Written by Claude Code when it loads the mod (editor typings)
+tsconfig.json
