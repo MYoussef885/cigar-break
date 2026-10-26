@@ -7,7 +7,7 @@ All paths under the scratch folder are shown as `<scratch>`. Dates are 2026-10-2
 | ruff and pytest green (unit, replay, MCP conformance, fail-open, performance) | [tests.txt](tests.txt) |
 | Hook p95 < 150 ms on a 5 MB transcript | [perf.txt](perf.txt): p95 76 ms through `/usr/bin/python3` 3.9 with the re-exec, 27 ms with `python3` 3.11 |
 | Fail-open: corrupt DB, bad transcript, garbage stdin each exit 0 with no output, and are logged | `tests/test_failopen.py` in [tests.txt](tests.txt) (32 cases, all run through the real launcher) |
-| End-to-end with `claude --plugin-dir`, SRS §7 steps 1–5 | [e2e-suggest.md](e2e-suggest.md) and [e2e-auto.md](e2e-auto.md) (driven in a PTY). The owner's interactive `/clear` check is below and stays **pending** until confirmed. |
+| End-to-end with `claude --plugin-dir`, SRS §7 steps 1–5 | [e2e-suggest.md](e2e-suggest.md) and [e2e-auto.md](e2e-auto.md) (driven in a PTY). The owner's interactive `/clear` check below was **confirmed ✅** in the Session 1 review (D-026). |
 | D-007 spike recorded with evidence | [d007-spike/results.md](d007-spike/results.md), [d007-spike/register.ts](d007-spike/register.ts), and D-007 in `decisions.md` |
 | D-014 findings recorded | D-014 in `decisions.md`; [d014/](d014/) (hook payloads, MCP handshake, MCP server env) |
 | Test output, performance numbers, one sample handoff, a log excerpt of a nudge firing | [tests.txt](tests.txt), [perf.txt](perf.txt), [sample-handoff.md](sample-handoff.md), [nudge-log.txt](nudge-log.txt) |

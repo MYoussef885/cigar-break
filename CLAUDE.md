@@ -29,6 +29,7 @@ The audience is developers who will install it on their own machines. **Trust is
 - **Small footprint** (NFR-6): short tool and skill descriptions, and no hook output on healthy turns.
 - **Speed** (NFR-2): a tool-call hook takes p95 < 150 ms. Read the transcript from its tail only. Open the DB once per hook run.
 - **Honesty:** never claim a feature works for an agent or client you didn't test. The README lists only verified setups.
+- **Owner config is off-limits** (D-027): probes run against an isolated config; never write to the owner's real Claude Code settings or `~/.cigar/`.
 - **Secrets:** none are needed in Session 1. In Session 2, stop and ask the owner for the PyPI token or any login. Never commit tokens.
 
 ## Conventions

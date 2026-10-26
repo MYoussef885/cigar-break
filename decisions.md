@@ -229,3 +229,27 @@ Check each one on the owner's machine and record what is true:
   - A `files` entry written as one `"path — note"` string is split, since an agent did that in the end-to-end run.
 - **Why:** the restored session must be able to state the next step (SRS §7 step 4).
 
+
+**D-026 · Session 1 rulings.** 2026-10-24 · Accepted (Claude Chat review)
+- **D-017 to D-025 are accepted.**
+- **D-020 is accepted as a change to architecture §6.** Rules (a) and (c) require at least 10 events in the window; §6 is updated to match.
+- **Auto mode is opt-in, terminal-only, and never resets without a handoff:**
+  - `auto` stays off by default (D-003). Only `/cigar:mode auto` or the config turns it on.
+  - The reset fires only after a handoff was saved for the current session. If the agent ignores the nudge, auto mode behaves exactly like `suggest`: nudge, wait, never clear.
+  - When auto mode clears, the developer sees one line saying it did, and naming the handoff file.
+  - A test proves that a nudge with no `take_break` never triggers `/clear`. If the code can clear without a handoff, fix that first.
+  - The README says auto mode is verified in the terminal CLI only. It is not claimed for the VS Code panel unless the owner's checklist proves it.
+- **No `$.model.fork` fallback in v0.1.** In the live run the agent called `take_break` on its own, so the fallback isn't needed for launch. It is listed under Later in roadmap.md.
+- **The VS Code panel is a supported surface for `suggest` mode**, since that is how most people will run Cigar. Session 2's owner checklist covers it: the nudge is visible, `/cigar:break` works, and the handoff is restored after `/clear` in the panel.
+- **Context windows.** Transcripts don't show 1M windows, so:
+  - Knees stay absolute token counts.
+  - A session whose observed context goes past 200k is marked extended-window and uses D-017's 1M knees from then on.
+  - A config key `context_window` (env `CIGAR_CONTEXT_WINDOW`, values `200k` or `1m`) is for developers who know their window. The window is stored per session.
+- **Python requirement:** the README states Python 3.11+ plainly, and how the launchers find it (D-022). The fresh-install test covers a machine where only an older `python3` is on PATH: exactly one clear `SessionStart` warning, and no errors.
+
+**D-027 · Never touch the developer's own Claude Code config.** 2026-10-24 · Accepted (after the Session 1 incident)
+- **Decision:**
+  - Every interactive or headless probe of Claude Code runs against an isolated config: a temp `HOME`, or the version's config-dir override if it has one. Record which one was used.
+  - Never write to `~/.claude/settings.json`, `~/.claude.json` or the owner's real `~/.cigar/` during tests. Tests use `CIGAR_HOME` pointing at a temp directory.
+  - Before and after any probe, diff the owner's real config files. Report any difference immediately.
+- **Why:** in Session 1, a probe changed the owner's default model and a permission setting. It was restored, but for a tool whose promise is "never harm the session", this has to be impossible by construction, not just restored afterwards.

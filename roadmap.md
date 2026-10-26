@@ -11,8 +11,8 @@
 
 | # | Session | Status |
 |---|---|---|
-| 1 | Core loop: detect, hand off, restore | Next |
-| 2 | Learn, share, package, launch | |
+| 1 | Core loop: detect, hand off, restore | ✅ |
+| 2 | Learn, share, package, launch | In progress |
 
 ---
 
@@ -47,13 +47,13 @@
 - Either way, write the findings into D-007.
 
 **Gate**
-- [ ] `ruff` and `pytest` are green: unit, replay, MCP conformance, fail-open and performance tests.
-- [ ] The performance result is reported: hook p95 < 150 ms on a 5 MB transcript.
-- [ ] Fail-open is proven: a corrupt DB, a bad transcript and garbage on stdin each exit 0 with no output, and are logged.
-- [ ] End-to-end with `claude --plugin-dir` in a scratch project, following SRS §7 steps 1–5. Claude Code runs what it can in headless mode, and gives the owner a short checklist for the interactive `/clear` step. The step is marked pending until the owner confirms it.
-- [ ] The D-007 spike result is recorded with evidence.
-- [ ] D-014 findings are recorded.
-- [ ] `docs/sessions/1/`: test output, the performance numbers, one sample handoff file, and a log excerpt of a nudge firing.
+- [x] `ruff` and `pytest` are green: unit, replay, MCP conformance, fail-open and performance tests.
+- [x] The performance result is reported: hook p95 < 150 ms on a 5 MB transcript.
+- [x] Fail-open is proven: a corrupt DB, a bad transcript and garbage on stdin each exit 0 with no output, and are logged.
+- [x] End-to-end with `claude --plugin-dir` in a scratch project, following SRS §7 steps 1–5. Claude Code runs what it can in headless mode, and gives the owner a short checklist for the interactive `/clear` step. The step is marked pending until the owner confirms it.
+- [x] The D-007 spike result is recorded with evidence.
+- [x] D-014 findings are recorded.
+- [x] `docs/sessions/1/`: test output, the performance numbers, one sample handoff file, and a log excerpt of a nudge firing.
 
 ## Session 2 · Learn, share, package, launch
 
@@ -77,8 +77,8 @@
 - `.claude-plugin/marketplace.json`. Install must work as `/plugin marketplace add MYoussef885/cigar-break` followed by `/plugin install cigar@cigar-break`. Verify the exact syntax on the current version.
 - PyPI: check that the name `cigar-break` is free (D-012), build with `uv build`, publish to TestPyPI, then to PyPI. Stop for the owner's PyPI token.
 - A GitHub Actions CI matrix (architecture §13) and a tagged release `v0.1.0`.
-- The README, launch-ready (FR-P3), including the privacy section.
-- `docs/demo-script.md`: a 30-second demo for the owner to record.
+- The README, launch-ready (FR-P3), including the privacy section and an "Auto mode (opt-in, terminal)" section (D-026).
+- `docs/demo-script.md`: a 30-second demo for the owner to record. It shows the auto break in the terminal, which is the most striking 30 seconds.
 - `docs/launch/`: drafts for X, Reddit (r/ClaudeAI) and Show HN.
 - Make the repo **public**. Stop and confirm with the owner first.
 
@@ -89,6 +89,8 @@
 - [ ] `cigar share --dry-run` prints a payload, and a check confirms it contains no paths, project names or code.
 - [ ] The MCP server works outside the plugin from a PyPI install (or TestPyPI if PyPI is still pending).
 - [ ] The repo is public, `v0.1.0` is tagged, and the launch drafts are in `docs/launch/`.
+- [ ] A test proves that in auto mode a nudge with no `take_break` never triggers `/clear` (D-026).
+- [ ] The owner's VS Code panel checklist passes in `suggest` mode: the nudge is visible, `/cigar:break` works, and the handoff is restored after `/clear` (D-026). Pending until the owner confirms.
 - [ ] The owner records the demo GIF. Mark this as pending until confirmed.
 
 ## Later (not in v0.1)
@@ -97,6 +99,8 @@
 - A public curves page or Hugging Face dataset, built from `data/curves/`.
 - Optional quality probes judged by an LLM.
 - A submission to Anthropic's plugin directory.
+- A `$.model.fork` handoff fallback: the mod drafts the handoff from the live conversation when the agent ignores the nudge (D-026).
+- Auto mode in the VS Code panel, once it is tested there (D-026).
 
 ---
 

@@ -106,15 +106,15 @@ Rules:
 - `baseline` = the model's median `behavior` on events below 40% of its knee, from the store. If there are fewer than 200 such events, use the default constant 0.08.
 - `pressure` = context tokens ÷ knee.
 - **The nudge fires when** context tokens ≥ the minimum floor (40k by default), **and** one of these holds:
-  - (a) `pressure ≥ 1.0` **and** `behavior ≥ baseline + 0.10`
+  - (a) `pressure ≥ 1.0` **and** `behavior ≥ baseline + 0.10`, with at least 10 events in the window (D-020, D-026)
   - (b) `pressure ≥ 1.3` (well past the knee, whatever the behavior)
-  - (c) `behavior ≥ 0.45` **and** `pressure ≥ 0.6` (clear distress before the knee)
+  - (c) `behavior ≥ 0.45` **and** `pressure ≥ 0.6` (clear distress before the knee), with at least 10 events in the window (D-020, D-026)
 - `fatigue` (for display) = `clamp(0.5·min(pressure,1.5)/1.5 + 0.5·behavior/0.45, 0, 1)`.
 - **Cooldown:** 25 events between nudges, at most 3 nudges per session. Each repeat nudge is worded more strongly. A `take_break` resets the counter.
 
 These constants live in `defaults.py` and can be overridden through config. They are starting values, and the learned knee (§9) is what makes them personal.
 
-**Default knees** (`defaults.py`): a table keyed by model family, plus a generic fallback of `min(0.5 × window, 120k)`. The window size per model comes from the same table: 200k by default, or 1M for model IDs marked as extended-context. Session 1 picks the starting values, writes the reasoning in a decision, and cites any public long-context evaluations it relied on. Exact numbers matter less than the learned replacement.
+**Default knees** (`defaults.py`): a table keyed by model family, plus a generic fallback of `min(0.5 × window, 120k)`. The window size comes from the same table: 200k by default, or 1M for model IDs marked as extended-context. Knees are absolute token counts. Transcripts don't mark 1M windows, so a session whose observed context passes 200k is marked extended-window and uses the 1M knees from then on; the `context_window` config key sets it up front. The window is stored per session (D-026). Session 1 picks the starting values, writes the reasoning in a decision, and cites any public long-context evaluations it relied on. Exact numbers matter less than the learned replacement.
 
 ## 7. Nudge and handoff text
 
@@ -212,6 +212,7 @@ The server speaks stdio JSON-RPC 2.0 and handles `initialize`, `notifications/in
 | `cooldown_events` | | 25 |
 | `max_nudges` | | 3 |
 | `check_patterns` | | test, build, lint, type-check regex list |
+| `context_window` (`200k` or `1m`) | `CIGAR_CONTEXT_WINDOW` | unset (detected per session, D-026) |
 | `home` | `CIGAR_HOME` | `~/.cigar` |
 
 ## 13. Testing
