@@ -85,4 +85,16 @@ FALLBACK_KNEE_FRACTION = 0.5
 # also counts as evidence of an extended window.
 EXTENDED_MARKERS = re.compile(r"\[1m\]|-1m\b|context-1m", re.IGNORECASE)
 
+# --- Knee learning (architecture §9, D-029) -------------------------------------
+KNEE_BUCKET_TOKENS = 10_000
+KNEE_MIN_BUCKET_EVENTS = 50  # a bucket counts with this many events...
+KNEE_MIN_BUCKET_SESSIONS = 3  # ...from at least this many sessions
+KNEE_LOW_FRACTION = 0.4  # baseline: buckets holding the lowest 40% of events
+KNEE_BASELINE_FLOOR = 0.02  # so a near-zero baseline doesn't make any blip a knee
+KNEE_RISE = 1.5  # knee: the 3-bucket mean reaches 1.5 x baseline...
+KNEE_RUN_BUCKETS = 3
+KNEE_MEDIUM = (5, 6)  # (sessions, counting buckets) for medium confidence
+KNEE_HIGH = (15, 10)  # ...and for high
+KNEE_REFRESH_SECONDS = 3600  # SessionStart refits at most this often
+
 LOG_RETENTION_DAYS = 7

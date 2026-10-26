@@ -14,7 +14,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from cigar import auto, config, defaults, logs, score, signals, transcript
+from cigar import auto, config, defaults, logs, score, signals, track, transcript
 from cigar.store import Store, project_hash
 
 Payload = dict[str, Any]
@@ -38,10 +38,6 @@ def _project_dir(payload: Payload) -> Path:
     return Path(raw)
 
 
-def _is_cigar_tool(tool: str) -> bool:
-    return tool.startswith("mcp__") and "cigar" in tool
-
-
 def _session_id(payload: Payload) -> str:
     sid = payload.get("session_id")
     if not isinstance(sid, str) or not sid:
@@ -51,6 +47,17 @@ def _session_id(payload: Payload) -> str:
 
 # --- handlers -------------------------------------------------------------------
 def session_start(payload: Payload, cfg: config.Config) -> Output:
+    output = _session_start(payload, cfg)
+    try:  # learning must never cost the restore above
+        with Store.open(cfg.db_path) as store:
+            if track.refresh_knees(store) is not None:
+                logs.write("knees refit", cfg.home)
+    except Exception as exc:
+        logs.error("knee refresh", exc, cfg.home)
+    return output
+
+
+def _session_start(payload: Payload, cfg: config.Config) -> Output:
     from cigar import handoff
 
     sid = _session_id(payload)
@@ -83,22 +90,6 @@ def session_start(payload: Payload, cfg: config.Config) -> Output:
         "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text},
         "systemMessage": line.format(path=pending["path"]),
     }
-
-
-def _baseline(store: Store, model: str | None, knee: int) -> float:
-    if not model:
-        return defaults.DEFAULT_BASELINE
-    key = f"baseline:{model}:{knee}"
-    cached = store.get_meta(key)
-    now = time.time()
-    if cached:
-        value, stamp = json.loads(cached)
-        if now - stamp < defaults.BASELINE_CACHE_SECONDS:
-            return float(value)
-    below = int(knee * defaults.BASELINE_KNEE_FRACTION)
-    value = score.baseline(store.low_pressure_behaviors(model, below))
-    store.set_meta(key, json.dumps([value, now]))
-    return value
 
 
 def _record_break(
@@ -146,62 +137,30 @@ def post_tool_use(payload: Payload, cfg: config.Config, failed: bool = False) ->
             logs.write(
                 f"transcript: no usage in tail session={sid[:8]}; using last known", cfg.home
             )
-        tokens = reading.context_tokens if reading else session.get("context_tokens")
-        model = (reading.model if reading else None) or session.get("model_last")
-        event_id = store.insert_event(sid, event, False, tokens, model)
-        updates: dict[str, Any] = {}
-        if tokens is not None:
-            updates["context_tokens"] = tokens
-        if model:
-            updates["model_last"] = model
-
-        window = score.context_window(
-            session.get("context_window"), cfg.context_window, model, tokens or 0
+        outcome = track.record(
+            store,
+            cfg,
+            session,
+            event,
+            reading.context_tokens if reading else None,
+            reading.model if reading else None,
         )
-        if window != session.get("context_window"):
-            updates["context_window"] = window
-        store.update_session(sid, **updates)
-
-        if _is_cigar_tool(tool):
-            # Cigar's own tools are recorded but never scored.
-            store.set_event_signals(event_id, (), 0.0)
+        if track.is_cigar_tool(tool):
             if tool.endswith("__take_break") and not event.failed:
+                tokens = reading.context_tokens if reading else session.get("context_tokens")
                 _record_break(store, cfg, sid, project, float(session["started_at"]), tokens)
             return None
+    result, level = outcome.score, outcome.level
+    if result is None or level is None:
+        return None
 
-        history = store.recent_events(sid, defaults.UNDO_LOOKBACK_EVENTS, before_id=event_id)
-        path_history = (
-            store.path_events(sid, event.path, event_id)
-            if event.kind == "read" and event.path
-            else []
-        )
-        found = signals.detect(event, history, path_history)
-        recent = [e.signals for e in history[-(defaults.WINDOW_EVENTS - 1) :]] + [found]
-        knee = score.default_knee(model, window, cfg.knee_tokens)
-        base = _baseline(store, model, knee)
-        result = score.evaluate(recent, tokens or 0, knee, base, cfg.min_tokens)
-        store.set_event_signals(event_id, found, result.behavior)
-
-        if cfg.mode == "observe":
-            return None
-        seq = int(session.get("main_events") or 0) + 1
-        last = session.get("last_nudge_seq")
-        level = score.nudge_level(
-            result,
-            int(session.get("nudges") or 0),
-            None if last is None else seq - int(last),
-            cfg.cooldown_events,
-            cfg.max_nudges,
-        )
-        if level is None:
-            return None
-        store.record_nudge(sid, seq)
-
-    agent_text, developer_text = score.render_nudge(result, level, model, cfg.mode == "auto")
+    agent_text, developer_text = score.render_nudge(
+        result, level, outcome.model, cfg.mode == "auto"
+    )
     logs.write(
         f"nudge session={sid[:8]} level={level} trigger={result.trigger} "
-        f"tokens={result.context_tokens} knee={result.knee} pressure={result.pressure} "
-        f"behavior={result.behavior} baseline={result.baseline} "
+        f"tokens={result.context_tokens} knee={result.knee} ({outcome.knee_source}) "
+        f"pressure={result.pressure} behavior={result.behavior} baseline={result.baseline} "
         f"counts={json.dumps(result.counts, sort_keys=True)}",
         cfg.home,
     )

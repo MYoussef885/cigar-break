@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from cigar import config, defaults, score
+from cigar import config, defaults, score, track
 from cigar.store import Store
 
 
@@ -23,7 +23,7 @@ def collect(
     tokens = session.get("context_tokens") or 0
     model = session.get("model_last")
     window = score.context_window(session.get("context_window"), cfg.context_window, model, tokens)
-    knee = score.default_knee(model, window, cfg.knee_tokens)
+    knee, source = track.knee_for(store, cfg, model, window)
     events = store.recent_events(session["id"], defaults.WINDOW_EVENTS)
     result = score.evaluate([e.signals for e in events], tokens, knee, min_tokens=cfg.min_tokens)
     info["session"] = {
@@ -32,7 +32,7 @@ def collect(
         "context_tokens": session.get("context_tokens"),
         "knee": knee,
         "context_window": window,
-        "knee_source": "override" if cfg.knee_tokens else "default",
+        "knee_source": source,
         "pressure": result.pressure,
         "behavior": result.behavior,
         "fatigue": result.fatigue,

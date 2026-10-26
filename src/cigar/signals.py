@@ -78,7 +78,8 @@ def _edit_hashes(tool: str, tool_input: dict[str, Any], response: Any) -> tuple[
         return _text_hash(original), _text_hash(tool_input.get("content"))
     if tool == "NotebookEdit":
         return None, _text_hash(tool_input.get("new_source"))
-    return None, None
+    # Another agent's edit tool (record_event): the same field names, if it has them.
+    return _text_hash(tool_input.get("old_string")), _text_hash(tool_input.get("new_string"))
 
 
 def extract(
@@ -88,16 +89,21 @@ def extract(
     error: str | None = None,
     failed: bool = False,
     checks: re.Pattern[str] | None = None,
+    kind: str | None = None,
+    path: str | None = None,
 ) -> Event:
-    """Build an Event from a PostToolUse / PostToolUseFailure payload."""
+    """Build an Event from a PostToolUse / PostToolUseFailure payload.
+
+    `kind` and `path` override what the Claude Code tool name implies; agents
+    that report through record_event use them.
+    """
     tool_input = tool_input if isinstance(tool_input, dict) else {}
-    kind = kind_of(tool)
+    kind = kind or kind_of(tool)
     if isinstance(tool_response, dict) and tool_response.get("isError") is True:
         failed = True
 
-    path = None
     old_hash = new_hash = None
-    if kind in ("read", "edit"):
+    if kind in ("read", "edit") and path is None:
         raw = tool_input.get("file_path") or tool_input.get("notebook_path")
         path = raw if isinstance(raw, str) else None
     if kind == "edit":

@@ -241,6 +241,52 @@ class Store:
         ).fetchall()
         return [float(r[0]) for r in rows]
 
+    # --- learning (architecture §9) --------------------------------------------
+    # Main-agent events with a context size, a model and scored signals, never
+    # Cigar's own tool calls. A session with no window recorded counts as 200k.
+    _LEARN_FROM = (
+        "FROM events e JOIN sessions s ON s.id = e.session_id "
+        "WHERE e.is_subagent = 0 AND e.context_tokens IS NOT NULL AND e.model IS NOT NULL "
+        "AND e.signals_json IS NOT NULL "
+        "AND NOT (e.tool LIKE 'mcp\\_\\_%' ESCAPE '\\' AND e.tool LIKE '%cigar%')"
+    )
+
+    def knee_rows(self, bucket_tokens: int) -> dict[str, list[tuple[Any, ...]]]:
+        """Aggregates for knee fitting, keyed by kind:
+
+        signals: (model, window, bucket, signals_json, events)
+        sessions: (model, window, bucket, distinct sessions)
+        groups: (model, window, distinct sessions, harnesses joined by ',')
+        """
+        window = "COALESCE(s.context_window, '200k')"
+        bucket = f"e.context_tokens / {int(bucket_tokens)}"
+        signals = self.conn.execute(
+            f"SELECT e.model, {window}, {bucket}, e.signals_json, COUNT(*) {self._LEARN_FROM} "
+            "GROUP BY 1, 2, 3, 4"
+        ).fetchall()
+        sessions = self.conn.execute(
+            f"SELECT e.model, {window}, {bucket}, COUNT(DISTINCT e.session_id) "
+            f"{self._LEARN_FROM} GROUP BY 1, 2, 3"
+        ).fetchall()
+        groups = self.conn.execute(
+            f"SELECT e.model, {window}, COUNT(DISTINCT e.session_id), "
+            f"GROUP_CONCAT(DISTINCT s.harness) {self._LEARN_FROM} GROUP BY 1, 2"
+        ).fetchall()
+        return {
+            "signals": [tuple(r) for r in signals],
+            "sessions": [tuple(r) for r in sessions],
+            "groups": [tuple(r) for r in groups],
+        }
+
+    def compaction_tokens(self) -> list[tuple[str, str, int]]:
+        """(model, window, context tokens) of every recorded compaction."""
+        rows = self.conn.execute(
+            "SELECT c.model, COALESCE(s.context_window, '200k'), c.context_tokens "
+            "FROM compactions c LEFT JOIN sessions s ON s.id = c.session_id "
+            "WHERE c.model IS NOT NULL AND c.context_tokens IS NOT NULL"
+        ).fetchall()
+        return [tuple(r) for r in rows]  # type: ignore[misc]
+
     # --- compactions ----------------------------------------------------------
     def record_compaction(
         self, session_id: str, trigger: str | None, context_tokens: int | None, model: str | None
