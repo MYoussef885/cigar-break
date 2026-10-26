@@ -9,6 +9,8 @@ from helpers import ROOT
 from cigar import cli, config
 
 SKILLS = ROOT / "skills"
+ALL_SKILLS = sorted(p.name for p in SKILLS.iterdir() if (p / "SKILL.md").exists())
+SHELL_SKILLS = [n for n in ALL_SKILLS if "\n!`" in (SKILLS / n / "SKILL.md").read_text()]
 
 
 def test_mode_show_and_set(cigar_home: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -31,7 +33,11 @@ def test_status_without_sessions(cigar_home: Path, capsys: pytest.CaptureFixture
     assert '"mode": "suggest"' in capsys.readouterr().out
 
 
-@pytest.mark.parametrize("name", ["status", "break", "mode"])
+def test_every_skill_is_checked() -> None:
+    assert ALL_SKILLS == ["break", "mode", "report", "status"]
+
+
+@pytest.mark.parametrize("name", ALL_SKILLS)
 def test_skills_are_user_only_and_short(name: str) -> None:
     text = (SKILLS / name / "SKILL.md").read_text()
     front = text.split("---")[1]
@@ -39,9 +45,13 @@ def test_skills_are_user_only_and_short(name: str) -> None:
     assert "disable-model-invocation: true" in front
     description = re.search(r"^description: (.+)$", front, re.M)
     assert description and len(description.group(1)) <= 100
+    # Plain YAML scalars: a ": " inside an unquoted value breaks the frontmatter.
+    for line in front.strip().splitlines():
+        _, _, value = line.partition(": ")
+        assert ": " not in value or value[:1] in "\"'", line
 
 
-@pytest.mark.parametrize("name", ["status", "mode"])
+@pytest.mark.parametrize("name", SHELL_SKILLS)
 def test_skill_shell_lines_never_abort(name: str) -> None:
     # A non-zero exit aborts a skill's inline shell and hides the output (D-014).
     lines = [

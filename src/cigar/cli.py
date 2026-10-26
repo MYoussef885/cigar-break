@@ -1,4 +1,4 @@
-"""`cigar` command line: status and mode (FR-C6). Report and share arrive in Session 2."""
+"""`cigar` command line: status, report, share and mode (FR-C6)."""
 
 from __future__ import annotations
 
@@ -50,6 +50,24 @@ def cmd_mode(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_report(args: argparse.Namespace) -> int:
+    from cigar import report, track
+
+    cfg = config.load()
+    with Store.open(cfg.db_path) as store:
+        fits = track.refresh_knees(store, force=True) or []
+        compactions = store.compaction_tokens()
+    print(report.render_text(fits, compactions))
+    if args.html or args.open:
+        path = report.write_html(cfg.home, report.render_html(fits, compactions))
+        print(f"\nHTML report: {path}")
+        if args.open:
+            import webbrowser
+
+            webbrowser.open(path.as_uri())
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cigar", description="Cigar: take a break before the context rots."
@@ -62,6 +80,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_status.add_argument("--project", help="project directory (default: current directory)")
     p_status.add_argument("--json", action="store_true", help="print JSON")
     p_status.set_defaults(func=cmd_status)
+
+    p_report = sub.add_parser("report", help="your signal rate by context size, per model")
+    p_report.add_argument("--html", action="store_true", help="also write the HTML report")
+    p_report.add_argument("--open", action="store_true", help="write the HTML and open it")
+    p_report.set_defaults(func=cmd_report)
 
     p_mode = sub.add_parser("mode", help="show or set the mode")
     p_mode.add_argument("mode", nargs="?", help="suggest, observe or auto")
