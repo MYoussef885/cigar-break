@@ -6,11 +6,11 @@
 // The fake `$` covers only what the mod uses. Clock callbacks run right after
 // the handler returns, so a scheduled /clear shows up in "commands".
 import { access, readFile, writeFile } from 'node:fs/promises'
-import { pathToFileURL } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, join } from 'node:path'
 
 const [cigarHome, sessionId, reason = 'answer', agentId] = process.argv.slice(2)
-const here = dirname(new URL(import.meta.url).pathname)
+const here = dirname(fileURLToPath(import.meta.url))
 const { register } = await import(pathToFileURL(join(here, '..', 'mods', 'auto.ts')).href)
 
 const commands = []
