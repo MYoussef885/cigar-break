@@ -62,7 +62,8 @@ class Store:
         version = self.conn.execute("PRAGMA user_version").fetchone()[0]
         if version >= SCHEMA_VERSION:
             return
-        self.conn.execute("PRAGMA journal_mode = WAL")
+        # BEGIN IMMEDIATE waits on the busy timeout; a journal_mode change does not,
+        # so concurrent first opens migrate first and switch to WAL afterwards (D-030).
         self.conn.execute("BEGIN IMMEDIATE")
         try:
             # Re-check under the write lock: another hook may have migrated.
@@ -79,6 +80,18 @@ class Store:
         except BaseException:
             self.conn.execute("ROLLBACK")
             raise
+        self._use_wal()
+
+    def _use_wal(self) -> None:
+        deadline = time.monotonic() + BUSY_TIMEOUT_MS / 1000
+        while True:
+            try:
+                self.conn.execute("PRAGMA journal_mode = WAL")
+                return
+            except sqlite3.OperationalError:
+                if time.monotonic() > deadline:
+                    return  # another connection is switching it; WAL is only for speed
+                time.sleep(0.02)
 
     def get_meta(self, key: str) -> str | None:
         row = self.conn.execute("SELECT value FROM meta WHERE key = ?", (key,)).fetchone()
