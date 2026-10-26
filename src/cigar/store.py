@@ -17,7 +17,7 @@ from cigar import __version__
 from cigar.signals import Event
 
 MIGRATIONS_DIR = Path(__file__).with_name("migrations")
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 BUSY_TIMEOUT_MS = 2000
 
 
@@ -275,6 +275,15 @@ class Store:
             "SELECT * FROM handoffs WHERE project_hash = ? AND consumed_at IS NULL "
             "AND created_at >= ? ORDER BY created_at DESC LIMIT 1",
             (project, now - max_age),
+        ).fetchone()
+        return dict(row) if row else None
+
+    def session_handoff(self, project: str, since: float) -> dict | None:
+        """The pending handoff saved for the project since `since` (the session start)."""
+        row = self.conn.execute(
+            "SELECT * FROM handoffs WHERE project_hash = ? AND consumed_at IS NULL "
+            "AND created_at >= ? ORDER BY created_at DESC LIMIT 1",
+            (project, since),
         ).fetchone()
         return dict(row) if row else None
 

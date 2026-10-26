@@ -99,6 +99,7 @@ def test_cooldown_cap_and_break_reset(project: Path, at_140k: Path) -> None:
     nudged = [i for i, fired in enumerate(outputs) if fired]
     assert nudged == [0, 25, 50]  # cooldown 25, at most 3
 
+    save_handoff(project)
     tb = payload(project, at_140k, tool_name="mcp__plugin_cigar_cigar__take_break", tool_input={})
     assert run_hook("post_tool_use", tb)[1] == ""
     with db() as s:
@@ -111,6 +112,7 @@ def test_stop_reminds_once_after_break(project: Path, at_140k: Path) -> None:
     stop = {"session_id": "sess-1", "cwd": str(project)}
     run_hook("post_tool_use", payload(project, at_140k))
     assert run_hook("stop", stop)[1] == ""
+    save_handoff(project)
     tb = payload(project, at_140k, tool_name="mcp__plugin_cigar_cigar__take_break", tool_input={})
     run_hook("post_tool_use", tb)
     assert json.loads(run_hook("stop", stop)[1]) == {
@@ -243,14 +245,21 @@ def test_auto_mode_marks_ready_after_break(
     assert "in auto mode the context resets" in data["systemMessage"]
     marker = auto.marker_path(cigar_home, "sess-1")
     assert not marker.exists()  # a nudge alone never resets
+    rel = save_handoff(project)
     tb = payload(project, at_140k, tool_name="mcp__plugin_cigar_cigar__take_break", tool_input={})
     run_hook("post_tool_use", tb)
-    assert json.loads(marker.read_text())["state"] == "ready"
+    assert json.loads(marker.read_text()) | {"ts": 0} == {
+        "state": "ready",
+        "session": "sess-1",
+        "handoff": rel,
+        "ts": 0,
+    }
     stop = json.loads(run_hook("stop", {"session_id": "sess-1"})[1])
     assert "auto mode clears the context" in stop["systemMessage"]
 
 
 def test_suggest_mode_never_writes_markers(project: Path, at_140k: Path, cigar_home: Path) -> None:
+    save_handoff(project)
     tb = payload(project, at_140k, tool_name="mcp__plugin_cigar_cigar__take_break", tool_input={})
     run_hook("post_tool_use", tb)
     assert not (cigar_home / "auto").exists()
@@ -261,13 +270,99 @@ def test_auto_markers_are_pruned(cigar_home: Path) -> None:
 
     from cigar import auto
 
-    ready = auto.mark_ready(cigar_home, "a")
-    fired = auto.mark_ready(cigar_home, "b")
+    ready = auto.mark_ready(cigar_home, "a", "h.md")
+    fired = auto.mark_ready(cigar_home, "b", "h.md")
     fired.write_text(json.dumps({"state": "fired"}))
-    old = auto.mark_ready(cigar_home, "c")
+    old = auto.mark_ready(cigar_home, "c", "h.md")
     os.utime(old, (time.time() - 2 * 86400,) * 2)
     broken = cigar_home / "auto" / "d.json"
     broken.write_text("{nope")
     auto.prune(cigar_home)
     assert sorted(p.name for p in (cigar_home / "auto").iterdir()) == [ready.name]
     assert auto.marker_path(cigar_home, "../../etc/x").parent == cigar_home / "auto"
+
+
+TAKE_BREAK = "mcp__plugin_cigar_cigar__take_break"
+
+
+@pytest.mark.parametrize("mode", ["suggest", "auto"])
+def test_take_break_without_a_saved_handoff_is_not_a_break(
+    mode: str, project: Path, at_140k: Path, cigar_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The tool reporting success is not enough: no saved handoff, no break (D-026)."""
+    monkeypatch.setenv("CIGAR_MODE", mode)
+    run_hook("post_tool_use", payload(project, at_140k))
+    run_hook("post_tool_use", payload(project, at_140k, tool_name=TAKE_BREAK, tool_input={}))
+    with db() as s:
+        assert s.get_session("sess-1")["breaks"] == 0
+    assert not (cigar_home / "auto").exists()
+    assert run_hook("stop", {"session_id": "sess-1"})[1] == ""
+    assert "break ignored session=sess-1: no handoff saved this session" in logs_text(cigar_home)
+
+
+def test_handoff_from_an_earlier_session_does_not_count(
+    project: Path, at_140k: Path, cigar_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CIGAR_MODE", "auto")
+    save_handoff(project, age=3600)  # pending, but older than this session
+    run_hook("post_tool_use", payload(project, at_140k, tool_name=TAKE_BREAK, tool_input={}))
+    assert not (cigar_home / "auto").exists()
+
+
+def test_auto_clear_line_names_the_handoff(
+    project: Path, at_140k: Path, cigar_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from cigar import auto
+
+    monkeypatch.setenv("CIGAR_MODE", "auto")
+    run_hook("session_start", {"session_id": "sess-1", "source": "startup", "cwd": str(project)})
+    rel = save_handoff(project)
+    run_hook("post_tool_use", payload(project, at_140k, tool_name=TAKE_BREAK, tool_input={}))
+    marker = auto.marker_path(cigar_home, "sess-1")
+    marker.write_text(json.dumps(json.loads(marker.read_text()) | {"state": "fired"}))  # the mod
+    start = {"session_id": "sess-2", "source": "clear", "cwd": str(project)}
+    data = json.loads(run_hook("session_start", start)[1])
+    assert data["systemMessage"] == (
+        f"🚬 Cigar auto mode cleared the context and restored the handoff from {rel}."
+    )
+    assert not marker.exists()
+
+
+def test_auto_clear_without_restore_still_says_so(
+    project: Path, cigar_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from cigar import auto
+
+    marker = auto.mark_ready(cigar_home, "sess-1", ".cigar/handoffs/x.md")
+    marker.write_text(json.dumps(json.loads(marker.read_text()) | {"state": "fired"}))
+    start = {"session_id": "sess-2", "source": "clear", "cwd": str(project)}
+    message = json.loads(run_hook("session_start", start)[1])["systemMessage"]
+    assert message.startswith("🚬 Cigar auto mode cleared the context, but the handoff ")
+    assert ".cigar/handoffs/x.md" in message
+
+
+def test_window_turns_1m_past_200k_and_stays(
+    project: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    t = tmp_path / "t.jsonl"
+    for i, tokens in enumerate((150_000, 230_000, 60_000)):
+        write_jsonl(t, [assistant(tokens, "claude-sonnet-5-5")])
+        run_hook("post_tool_use", payload(project, t, tool_input={"command": f"ls {i}"}))
+        with db() as s:
+            window = s.get_session("sess-1")["context_window"]
+        assert window == ("200k" if i == 0 else "1m")
+    from cigar import status
+
+    with db() as s:
+        info = status.collect(s, config.load(), "sess-1")
+    assert (info["session"]["context_window"], info["session"]["knee"]) == ("1m", 140_000)
+
+
+def test_configured_window_is_stored(
+    project: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("CIGAR_CONTEXT_WINDOW", "1M")
+    t = write_jsonl(tmp_path / "t.jsonl", [assistant(150_000, "claude-sonnet-5-5")])
+    assert run_hook("post_tool_use", payload(project, t))[1] == ""  # 150k < 1M knee of 140k x 1.3
+    with db() as s:
+        assert s.get_session("sess-1")["context_window"] == "1m"

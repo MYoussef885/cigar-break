@@ -1,8 +1,10 @@
-"""Auto mode markers (D-007, D-021).
+"""Auto mode markers (D-007, D-021, D-026).
 
-In `auto` mode a successful take_break writes <CIGAR_HOME>/auto/<session id>.json
-with state "ready". The mod in mods/auto.ts reads it at the end of the turn,
-marks it "fired" and runs /clear. Only these markers cross between the two.
+In `auto` mode, once a handoff is saved for the session, the hook writes
+<CIGAR_HOME>/auto/<session id>.json with state "ready" and the handoff's path.
+The mod in mods/auto.ts reads it at the end of the turn, marks it "fired" and
+runs /clear. With no marker, or one without a handoff path, it never clears.
+Only these markers cross between the two.
 """
 
 from __future__ import annotations
@@ -12,6 +14,7 @@ import time
 from pathlib import Path
 
 MAX_AGE_SECONDS = 24 * 3600
+FIRED_MAX_AGE_SECONDS = 600  # a clear that fired longer ago than this is not "just now"
 
 
 def marker_path(home: Path, session_id: str) -> Path:
@@ -19,13 +22,37 @@ def marker_path(home: Path, session_id: str) -> Path:
     return home / "auto" / f"{safe}.json"
 
 
-def mark_ready(home: Path, session_id: str) -> Path:
+def mark_ready(home: Path, session_id: str, handoff: str) -> Path:
     path = marker_path(home, session_id)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
-    tmp.write_text(json.dumps({"state": "ready", "session": session_id, "ts": time.time()}))
+    marker = {"state": "ready", "session": session_id, "handoff": handoff, "ts": time.time()}
+    tmp.write_text(json.dumps(marker))
     tmp.replace(path)
     return path
+
+
+def take_fired(home: Path, max_age: float = FIRED_MAX_AGE_SECONDS) -> str | None:
+    """The handoff path of a clear the mod just fired, removing its marker."""
+    folder = home / "auto"
+    if not folder.is_dir():
+        return None
+    found: tuple[float, str] | None = None
+    cutoff = time.time() - max_age
+    for path in folder.glob("*.json"):
+        try:
+            marker = json.loads(path.read_text())
+            if marker.get("state") != "fired" or path.stat().st_mtime < cutoff:
+                continue
+            handoff = marker.get("handoff")
+            if isinstance(handoff, str) and handoff:
+                stamp = path.stat().st_mtime
+                if found is None or stamp > found[0]:
+                    found = (stamp, handoff)
+            path.unlink()
+        except (OSError, ValueError, AttributeError):
+            continue
+    return found[1] if found else None
 
 
 def prune(home: Path, max_age: float = MAX_AGE_SECONDS) -> None:

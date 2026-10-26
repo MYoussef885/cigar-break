@@ -1,10 +1,12 @@
 import type { Register } from 'claude-code'
 
-// Cigar auto mode (D-007, D-021). While the mode is `auto`, the Python hook
-// writes <CIGAR_HOME>/auto/<session id>.json with state "ready" once
-// take_break has saved a handoff. At the end of that turn this module runs
-// /clear, and Cigar's SessionStart hook restores the handoff. Anything
-// unexpected leaves the session alone.
+// Cigar auto mode (D-007, D-021, D-026). While the mode is `auto`, the Python
+// hook writes <CIGAR_HOME>/auto/<session id>.json with state "ready" and the
+// handoff's path, but only once a handoff is saved for the session. At the end
+// of that turn this module runs /clear, and Cigar's SessionStart hook restores
+// the handoff and says so in one line. No marker, or a marker without a
+// handoff, means no clear: a nudge alone never resets. Anything unexpected
+// leaves the session alone.
 
 const CLEAR_DELAY_MS = 1000
 
@@ -21,6 +23,7 @@ async function takeReadyMarker($: any): Promise<boolean> {
   if (!path || !(await $.fs.exists(path))) return false
   const marker = JSON.parse(await $.fs.read(path))
   if (marker.state !== 'ready') return false
+  if (typeof marker.handoff !== 'string' || !marker.handoff) return false
   await $.fs.write(path, JSON.stringify({ ...marker, state: 'fired' }))
   return true
 }
@@ -31,7 +34,6 @@ export const register: Register = on => {
     if (e.agentId !== undefined || e.reason !== 'answer') return out
     try {
       if (await takeReadyMarker($)) {
-        $.ui.toast('🚬 Cigar auto mode: handoff saved, starting a fresh context.')
         $.clock.after(CLEAR_DELAY_MS, async () => {
           await $.command.run({ command: 'clear' })
         })

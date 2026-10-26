@@ -24,23 +24,32 @@ class Score:
     trigger: str | None  # "a", "b", "c" or None (architecture §6)
 
 
-def window_size(model: str | None, observed_tokens: int = 0) -> int:
+def context_window(
+    stored: str | None, configured: str | None, model: str | None, observed_tokens: int = 0
+) -> str:
+    """A session's window label, "200k" or "1m" (D-026).
+
+    Once a session is "1m" it stays "1m". Seeing more than 200k tokens, or a
+    model ID marked as extended, is proof of a 1M window whatever the config says.
+    """
+    if "1m" in (stored, configured):
+        return "1m"
     if model and defaults.EXTENDED_MARKERS.search(model):
-        return defaults.EXTENDED_WINDOW
+        return "1m"
     if observed_tokens > defaults.STANDARD_WINDOW:
-        return defaults.EXTENDED_WINDOW
-    return defaults.STANDARD_WINDOW
+        return "1m"
+    return "200k"
 
 
-def default_knee(model: str | None, observed_tokens: int = 0, override: int | None = None) -> int:
-    """The starting knee for a model (D-017). `override` forces one knee for all."""
+def default_knee(model: str | None, window: str = "200k", override: int | None = None) -> int:
+    """The starting knee for a model and window label (D-017). `override` forces one knee."""
     if override and override > 0:
         return override
-    window = window_size(model, observed_tokens)
     for pattern, standard, extended in defaults.KNEES:
         if model and re.search(pattern, model, re.IGNORECASE):
-            return extended if window == defaults.EXTENDED_WINDOW else standard
-    return int(min(defaults.FALLBACK_KNEE_FRACTION * window, defaults.FALLBACK_KNEE_CAP))
+            return extended if window == "1m" else standard
+    size = defaults.WINDOWS.get(window, defaults.STANDARD_WINDOW)
+    return int(min(defaults.FALLBACK_KNEE_FRACTION * size, defaults.FALLBACK_KNEE_CAP))
 
 
 def behavior(window: Sequence[Sequence[str]]) -> float:

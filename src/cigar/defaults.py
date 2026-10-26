@@ -68,6 +68,8 @@ TAIL_MAX_BYTES = 4 * 1024 * 1024
 # --- Knees (D-017) -------------------------------------------------------------
 STANDARD_WINDOW = 200_000
 EXTENDED_WINDOW = 1_000_000
+# Window labels stored per session and used in shared curves (D-026).
+WINDOWS: dict[str, int] = {"200k": STANDARD_WINDOW, "1m": EXTENDED_WINDOW}
 
 # (pattern on the model ID, knee for a 200k window, knee for a 1M window)
 KNEES: tuple[tuple[str, int, int], ...] = (

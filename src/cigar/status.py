@@ -22,7 +22,8 @@ def collect(
         return info
     tokens = session.get("context_tokens") or 0
     model = session.get("model_last")
-    knee = score.default_knee(model, tokens, cfg.knee_tokens)
+    window = score.context_window(session.get("context_window"), cfg.context_window, model, tokens)
+    knee = score.default_knee(model, window, cfg.knee_tokens)
     events = store.recent_events(session["id"], defaults.WINDOW_EVENTS)
     result = score.evaluate([e.signals for e in events], tokens, knee, min_tokens=cfg.min_tokens)
     info["session"] = {
@@ -30,6 +31,7 @@ def collect(
         "model": model,
         "context_tokens": session.get("context_tokens"),
         "knee": knee,
+        "context_window": window,
         "knee_source": "override" if cfg.knee_tokens else "default",
         "pressure": result.pressure,
         "behavior": result.behavior,
@@ -55,7 +57,8 @@ def render(info: dict[str, Any]) -> str:
             tokens, knee = round(s["context_tokens"] / 1000), round(s["knee"] / 1000)
             model = s["model"] or "unknown model"
             lines.append(
-                f"Context: {tokens}k tokens · knee ~{knee}k ({model}, {s['knee_source']}) "
+                f"Context: {tokens}k tokens · knee ~{knee}k ({model}, {s['context_window']} "
+                f"window, {s['knee_source']}) "
                 f"· pressure {s['pressure']:.2f}"
             )
         else:

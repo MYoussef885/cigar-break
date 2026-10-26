@@ -10,25 +10,44 @@ def window(*signals: tuple[str, ...], size: int = 20) -> list[tuple[str, ...]]:
 
 
 @pytest.mark.parametrize(
-    ("model", "tokens", "expected"),
+    ("model", "window", "expected"),
     [
-        ("claude-opus-5-5", 50_000, 120_000),
-        ("claude-sonnet-5-5", 50_000, 100_000),
-        ("claude-haiku-4-5-20251001", 50_000, 70_000),
-        ("claude-opus-5-5[1m]", 50_000, 160_000),
-        ("claude-opus-5-5", 250_000, 160_000),  # more than 200k seen: a 1M window
-        ("gpt-5", 50_000, 100_000),  # fallback: min(0.5 x 200k, 120k)
-        ("gpt-5", 300_000, 120_000),  # fallback: min(0.5 x 1M, 120k)
-        (None, 0, 100_000),
+        ("claude-opus-5-5", "200k", 120_000),
+        ("claude-sonnet-5-5", "200k", 100_000),
+        ("claude-haiku-4-5-20251001", "200k", 70_000),
+        ("claude-opus-5-5", "1m", 160_000),
+        ("gpt-5", "200k", 100_000),  # fallback: min(0.5 x 200k, 120k)
+        ("gpt-5", "1m", 120_000),  # fallback: min(0.5 x 1M, 120k)
+        (None, "200k", 100_000),
     ],
 )
-def test_default_knee(model: str | None, tokens: int, expected: int) -> None:
-    assert score.default_knee(model, tokens) == expected
+def test_default_knee(model: str | None, window: str, expected: int) -> None:
+    assert score.default_knee(model, window) == expected
+
+
+@pytest.mark.parametrize(
+    ("stored", "configured", "model", "tokens", "expected"),
+    [
+        (None, None, "claude-opus-5-5", 150_000, "200k"),
+        (None, None, "claude-opus-5-5", 200_001, "1m"),  # past 200k: a 1M window
+        ("1m", None, "claude-opus-5-5", 40_000, "1m"),  # sticky after compaction
+        ("1m", "200k", "claude-opus-5-5", 40_000, "1m"),  # evidence beats config
+        (None, "200k", "claude-opus-5-5", 250_000, "1m"),
+        (None, "1m", "claude-opus-5-5", 40_000, "1m"),  # the developer knows
+        ("200k", "1m", "claude-opus-5-5", 40_000, "1m"),
+        (None, None, "claude-opus-5-5[1m]", 50_000, "1m"),
+        (None, None, None, 0, "200k"),
+    ],
+)
+def test_context_window(
+    stored: str | None, configured: str | None, model: str | None, tokens: int, expected: str
+) -> None:
+    assert score.context_window(stored, configured, model, tokens) == expected
 
 
 def test_knee_override() -> None:
-    assert score.default_knee("claude-opus-5-5", 0, override=20_000) == 20_000
-    assert score.default_knee("claude-opus-5-5", 0, override=0) == 120_000
+    assert score.default_knee("claude-opus-5-5", "200k", override=20_000) == 20_000
+    assert score.default_knee("claude-opus-5-5", "200k", override=0) == 120_000
 
 
 def test_behavior_is_capped() -> None:

@@ -25,6 +25,12 @@ STOP_REMINDER = "🚬 Handoff ready. Type /clear to take the break (or /compact 
 STOP_REMINDER_AUTO = (
     "🚬 Handoff ready. Cigar auto mode clears the context now; if it doesn't, type /clear."
 )
+RESTORED = "🚬 Cigar: restored the handoff from {path}."
+AUTO_RESTORED = "🚬 Cigar auto mode cleared the context and restored the handoff from {path}."
+AUTO_NOT_RESTORED = (
+    "🚬 Cigar auto mode cleared the context, but the handoff {path} could not be restored. "
+    "The resume tool (cigar MCP) returns the latest handoff."
+)
 
 
 def _project_dir(payload: Payload) -> Path:
@@ -54,23 +60,28 @@ def session_start(payload: Payload, cfg: config.Config) -> Output:
     project = project_hash(str(project_dir))
     with Store.open(cfg.db_path) as store:
         store.touch_session(sid, project, model=model, source=source)
+        fired = auto.take_fired(cfg.home) if source == "clear" else None
         auto.prune(cfg.home)
         if source not in ("clear", "compact"):
             logs.prune(cfg.home)
             return None
         pending = store.pending_handoff(project, defaults.HANDOFF_MAX_AGE_SECONDS)
-        if not pending:
-            return None
-        markdown = handoff.load(project_dir, pending["path"])
-        if markdown is None:
-            logs.write(f"restore skipped: handoff file missing ({pending['path']})", cfg.home)
+        markdown = handoff.load(project_dir, pending["path"]) if pending else None
+        if not pending or markdown is None:
+            if pending:
+                logs.write(f"restore skipped: handoff file missing ({pending['path']})", cfg.home)
+            if fired:
+                return {"systemMessage": AUTO_NOT_RESTORED.format(path=fired)}
             return None
         text = handoff.for_injection(markdown, pending["path"])
         store.consume_handoff(pending["id"])
-    logs.write(f"restore session={sid[:8]} source={source} chars={len(text)}", cfg.home)
+    logs.write(
+        f"restore session={sid[:8]} source={source} chars={len(text)} auto={bool(fired)}", cfg.home
+    )
+    line = AUTO_RESTORED if fired == pending["path"] else RESTORED
     return {
         "hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": text},
-        "systemMessage": f"🚬 Cigar: restored the handoff from {pending['path']}.",
+        "systemMessage": line.format(path=pending["path"]),
     }
 
 
@@ -88,6 +99,24 @@ def _baseline(store: Store, model: str | None, knee: int) -> float:
     value = score.baseline(store.low_pressure_behaviors(model, below))
     store.set_meta(key, json.dumps([value, now]))
     return value
+
+
+def _record_break(
+    store: Store, cfg: config.Config, sid: str, project: str, started: float, tokens: int | None
+) -> None:
+    """Count a break only if a handoff for this session is really saved (D-026).
+
+    The tool reporting success is not enough: in auto mode the marker is what
+    lets the mod run /clear, so it is written only with a saved handoff's path.
+    """
+    saved = store.session_handoff(project, started)
+    if saved is None:
+        logs.write(f"break ignored session={sid[:8]}: no handoff saved this session", cfg.home)
+        return
+    store.record_break(sid)
+    if cfg.mode == "auto":
+        auto.mark_ready(cfg.home, sid, saved["path"])
+    logs.write(f"break session={sid[:8]} tokens={tokens} mode={cfg.mode}", cfg.home)
 
 
 def post_tool_use(payload: Payload, cfg: config.Config, failed: bool = False) -> Output:
@@ -125,16 +154,19 @@ def post_tool_use(payload: Payload, cfg: config.Config, failed: bool = False) ->
             updates["context_tokens"] = tokens
         if model:
             updates["model_last"] = model
+
+        window = score.context_window(
+            session.get("context_window"), cfg.context_window, model, tokens or 0
+        )
+        if window != session.get("context_window"):
+            updates["context_window"] = window
         store.update_session(sid, **updates)
 
         if _is_cigar_tool(tool):
             # Cigar's own tools are recorded but never scored.
             store.set_event_signals(event_id, (), 0.0)
             if tool.endswith("__take_break") and not event.failed:
-                store.record_break(sid)
-                if cfg.mode == "auto":
-                    auto.mark_ready(cfg.home, sid)
-                logs.write(f"break session={sid[:8]} tokens={tokens} mode={cfg.mode}", cfg.home)
+                _record_break(store, cfg, sid, project, float(session["started_at"]), tokens)
             return None
 
         history = store.recent_events(sid, defaults.UNDO_LOOKBACK_EVENTS, before_id=event_id)
@@ -144,10 +176,10 @@ def post_tool_use(payload: Payload, cfg: config.Config, failed: bool = False) ->
             else []
         )
         found = signals.detect(event, history, path_history)
-        window = [e.signals for e in history[-(defaults.WINDOW_EVENTS - 1) :]] + [found]
-        knee = score.default_knee(model, tokens or 0, cfg.knee_tokens)
+        recent = [e.signals for e in history[-(defaults.WINDOW_EVENTS - 1) :]] + [found]
+        knee = score.default_knee(model, window, cfg.knee_tokens)
         base = _baseline(store, model, knee)
-        result = score.evaluate(window, tokens or 0, knee, base, cfg.min_tokens)
+        result = score.evaluate(recent, tokens or 0, knee, base, cfg.min_tokens)
         store.set_event_signals(event_id, found, result.behavior)
 
         if cfg.mode == "observe":

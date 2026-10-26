@@ -21,9 +21,9 @@ def test_open_migrates_once_with_wal(tmp_path: Path) -> None:
     with Store.open(db) as s:
         assert s.conn.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
         assert s.conn.execute("PRAGMA busy_timeout").fetchone()[0] == 2000
-        assert s.get_meta("schema_version") == "1"
+        assert s.get_meta("schema_version") == str(store.SCHEMA_VERSION)
     with Store.open(db) as s:
-        assert s.conn.execute("PRAGMA user_version").fetchone()[0] == 1
+        assert s.conn.execute("PRAGMA user_version").fetchone()[0] == store.SCHEMA_VERSION
 
 
 def test_concurrent_opens_migrate_safely(tmp_path: Path) -> None:
@@ -125,3 +125,31 @@ def test_write_value_keeps_other_keys(cigar_home: Path) -> None:
     config.write_value(cigar_home, "mode", "observe")
     cfg = config.load()
     assert (cfg.min_tokens, cfg.check_patterns, cfg.mode) == (1, ('a"b', "c"), "observe")
+
+
+def test_schema_1_database_migrates_keeping_rows(tmp_path: Path) -> None:
+    db = tmp_path / "old.db"
+    conn = sqlite3.connect(db)
+    conn.executescript(store._migrations()[0][1] + "; PRAGMA user_version = 1;")
+    conn.execute(
+        "INSERT INTO sessions (id, project_hash, started_at, last_seen) VALUES ('s', 'p', 1, 1)"
+    )
+    conn.commit()
+    conn.close()
+    with Store.open(db) as s:
+        row = s.get_session("s")
+        assert row is not None and row["context_window"] is None
+        assert s.conn.execute("PRAGMA user_version").fetchone()[0] == 2
+
+
+@pytest.mark.parametrize(
+    ("env_value", "toml", "expected"),
+    [("1m", None, "1m"), ("200K", None, "200k"), ("", "1m", "1m"), ("huge", None, None)],
+)
+def test_context_window_config(
+    env_value: str, toml: str | None, expected: str | None, cigar_home: Path
+) -> None:
+    if toml:
+        config.write_value(cigar_home, "context_window", toml)
+    cfg = config.load({"CIGAR_HOME": str(cigar_home), "CIGAR_CONTEXT_WINDOW": env_value})
+    assert cfg.context_window == expected

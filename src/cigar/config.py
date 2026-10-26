@@ -28,6 +28,7 @@ class Config:
     cooldown_events: int = defaults.COOLDOWN_EVENTS
     max_nudges: int = defaults.MAX_NUDGES
     check_patterns: tuple[str, ...] = field(default=defaults.CHECK_PATTERNS)
+    context_window: str | None = None  # "200k" or "1m"; None means detect (D-026)
 
     @property
     def db_path(self) -> Path:
@@ -49,6 +50,15 @@ def _read_toml(path: Path) -> dict[str, Any]:
 
     with path.open("rb") as f:
         return tomllib.load(f)
+
+
+def _window(*values: Any) -> str | None:
+    """The first value that names a known window ("200k" or "1m")."""
+    for value in values:
+        label = str(value).strip().lower() if value is not None else ""
+        if label in defaults.WINDOWS:
+            return label
+    return None
 
 
 def _int(*values: Any) -> int | None:
@@ -82,6 +92,7 @@ def load(env: dict[str, str] | None = None) -> Config:
         cooldown_events=cooldown if cooldown is not None else cfg.cooldown_events,
         max_nudges=max_nudges if max_nudges is not None else cfg.max_nudges,
         check_patterns=tuple(patterns) if isinstance(patterns, list) else cfg.check_patterns,
+        context_window=_window(env.get("CIGAR_CONTEXT_WINDOW"), data.get("context_window")),
     )
 
 
