@@ -1,0 +1,25 @@
+{
+  "name": "cigar-break",
+  "owner": {
+    "name": "Mohamed Youssef",
+    "url": "https://github.com/MYoussef885"
+  },
+  "metadata": {
+    "description": "Cigar: notices when a long Claude Code session starts to slip, saves a handoff, and restores it after /clear."
+  },
+  "plugins": [
+    {
+      "name": "cigar",
+      "source": "./",
+      "description": "Notices when a long session starts to slip, saves a structured handoff, and restores it after /clear.",
+      "license": "MIT",
+      "homepage": "https://github.com/MYoussef885/cigar-break",
+      "keywords": [
+        "context",
+        "handoff",
+        "compaction",
+        "session"
+      ]
+    }
+  ]
+}
