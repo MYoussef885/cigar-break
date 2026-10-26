@@ -1,6 +1,6 @@
 """`cigar-mcp`: a hand-written stdio JSON-RPC 2.0 MCP server (D-005, architecture §11).
 
-Tools: take_break, resume, status. Messages are newline-delimited JSON.
+Tools: take_break, resume, status and record_event. Messages are newline-delimited JSON.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any, BinaryIO
 
-from cigar import __version__, config, handoff, logs, status
+from cigar import __version__, config, handoff, logs, status, track
 from cigar.store import Store, project_hash
 
 # Newest first. Claude Code 2.1.288 sends 2025-11-25 in `initialize` (D-014).
@@ -74,6 +74,28 @@ TOOLS: list[dict[str, Any]] = [
         "inputSchema": {
             "type": "object",
             "properties": {"session_id": {"type": "string"}, "project": {"type": "string"}},
+        },
+    },
+    {
+        "name": "record_event",
+        "description": (
+            "For agents without Claude Code hooks: record one tool call after it runs. "
+            "Returns the fatigue score and whether a break (take_break) is suggested."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "session_id": {"type": "string", "description": "Stable for one agent session."},
+                "tool": {"type": "string"},
+                "ok": {"type": "boolean", "description": "False if the call failed."},
+                "context_tokens": {"type": "integer", "description": "Context size now."},
+                "model": {"type": "string"},
+                "kind": {"type": "string", "enum": list(track.KINDS)},
+                "path": {"type": "string", "description": "File path, for read/edit calls."},
+                "args": {"type": "object", "description": "Hashed, never stored."},
+                "exit_code": {"type": "integer"},
+            },
+            "required": ["session_id", "tool", "ok", "context_tokens", "model"],
         },
     },
 ]
@@ -139,10 +161,50 @@ def tool_status(arguments: dict[str, Any], cfg: config.Config) -> str:
     return status.render(info)
 
 
+def _typed(arguments: dict[str, Any], key: str, kind: type, required: bool = False) -> Any:
+    value = arguments.get(key)
+    if value is None:
+        if required:
+            raise ToolError(f"`{key}` is required.")
+        return None
+    if not isinstance(value, kind) or (kind is int and isinstance(value, bool)):
+        raise ToolError(f"`{key}` must be a {kind.__name__}.")
+    return value
+
+
+def tool_record_event(arguments: dict[str, Any], cfg: config.Config) -> str:
+    session_id = _typed(arguments, "session_id", str, required=True)
+    tool = _typed(arguments, "tool", str, required=True)
+    if not session_id.strip() or not tool.strip():
+        raise ToolError("`session_id` and `tool` must be non-empty.")
+    tokens = _typed(arguments, "context_tokens", int, required=True)
+    if tokens < 0:
+        raise ToolError("`context_tokens` must not be negative.")
+    try:
+        result = track.record_external(
+            cfg,
+            session_id,
+            tool,
+            ok=_typed(arguments, "ok", bool, required=True),
+            context_tokens=tokens,
+            model=_typed(arguments, "model", str, required=True),
+            path=_typed(arguments, "path", str),
+            args=_typed(arguments, "args", dict),
+            kind=_typed(arguments, "kind", str),
+            exit_code=_typed(arguments, "exit_code", int),
+            project=_project_dir(arguments),
+            harness="mcp",
+        )
+    except ValueError as exc:
+        raise ToolError(f"{exc}.") from exc
+    return json.dumps(result.as_dict())
+
+
 HANDLERS: dict[str, Callable[[dict[str, Any], config.Config], str]] = {
     "take_break": tool_take_break,
     "resume": tool_resume,
     "status": tool_status,
+    "record_event": tool_record_event,
 }
 
 

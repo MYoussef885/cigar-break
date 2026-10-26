@@ -70,7 +70,7 @@ def test_official_sdk_client(cigar_home: Path, project: Path) -> None:
     r = asyncio.run(session_run())
     assert r["init"].server_info.name == "cigar"
     assert r["init"].protocol_version in mcp_server.PROTOCOL_VERSIONS
-    assert {t.name for t in r["tools"].tools} == {"take_break", "resume", "status"}
+    assert {t.name for t in r["tools"].tools} == {"take_break", "resume", "status", "record_event"}
     assert "No Cigar handoff" in r["empty"].content[0].text
 
     saved = r["saved"].content[0].text
