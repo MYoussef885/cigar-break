@@ -1,0 +1,26 @@
+name: Share a Cigar curve
+description: An anonymous signal-rate-by-context curve, prefilled by `cigar share`.
+title: "Curve: "
+labels: ["curve"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        `cigar share` prefilled this form. The payload holds aggregates only: one model ID, its context window label (200k or 1m), counts and signal weight per 10k-token bucket, the knee, and the Cigar version. No paths, project names, code, prompts or user identifiers.
+
+        Review it, then submit. A maintainer checks it and adds the `curve-accepted` label; accepted curves are published in `data/curves/`.
+  - type: textarea
+    id: payload
+    attributes:
+      label: Payload
+      description: The exact JSON that `cigar share` showed you. Please don't edit it.
+      render: json
+    validations:
+      required: true
+  - type: checkboxes
+    id: consent
+    attributes:
+      label: Consent
+      options:
+        - label: I reviewed the payload and agree to publish it in this public repository (data/curves/), under the repository's license.
+          required: true

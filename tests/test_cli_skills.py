@@ -34,7 +34,7 @@ def test_status_without_sessions(cigar_home: Path, capsys: pytest.CaptureFixture
 
 
 def test_every_skill_is_checked() -> None:
-    assert ALL_SKILLS == ["break", "mode", "report", "status"]
+    assert ALL_SKILLS == ["break", "mode", "report", "share", "status"]
 
 
 @pytest.mark.parametrize("name", ALL_SKILLS)

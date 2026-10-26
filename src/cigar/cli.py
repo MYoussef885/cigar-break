@@ -68,6 +68,25 @@ def cmd_report(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_share(args: argparse.Namespace) -> int:
+    from cigar import share, track
+
+    cfg = config.load()
+    with Store.open(cfg.db_path) as store:
+        fits = track.refresh_knees(store, force=True) or []
+        harnesses = track.harnesses(store)
+    return share.run(
+        cfg,
+        fits,
+        harnesses,
+        model=args.model,
+        window=args.window,
+        dry_run=args.dry_run,
+        yes=args.yes,
+        skill=args.skill,
+    )
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="cigar", description="Cigar: take a break before the context rots."
@@ -85,6 +104,14 @@ def build_parser() -> argparse.ArgumentParser:
     p_report.add_argument("--html", action="store_true", help="also write the HTML report")
     p_report.add_argument("--open", action="store_true", help="write the HTML and open it")
     p_report.set_defaults(func=cmd_report)
+
+    p_share = sub.add_parser("share", help="share your anonymous curve (opt-in, shows it first)")
+    p_share.add_argument("--dry-run", action="store_true", help="print the payload only")
+    p_share.add_argument("--yes", action="store_true", help="skip the confirmation question")
+    p_share.add_argument("--model", help="which model's curve (default: the most data)")
+    p_share.add_argument("--window", choices=["200k", "1m"], help="which context window")
+    p_share.add_argument("--skill", help=argparse.SUPPRESS)  # /cigar:share passes its argument
+    p_share.set_defaults(func=cmd_share)
 
     p_mode = sub.add_parser("mode", help="show or set the mode")
     p_mode.add_argument("mode", nargs="?", help="suggest, observe or auto")
