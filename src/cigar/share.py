@@ -224,7 +224,7 @@ def run(
     pending = _pending_path(cfg)
     if skill is not None and skill.strip().lower() == "confirm":
         try:
-            saved = json.loads(pending.read_text())
+            saved = json.loads(pending.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             saved = None
         if not saved or time.time() - saved.get("ts", 0) > PENDING_MAX_AGE:
@@ -264,7 +264,7 @@ def run(
         return 0
     if skill is not None:
         pending.parent.mkdir(parents=True, exist_ok=True)
-        pending.write_text(json.dumps({"ts": time.time(), "payload": payload}))
+        pending.write_text(json.dumps({"ts": time.time(), "payload": payload}), encoding="utf-8")
         print("To share exactly this, type: /cigar:share confirm", file=out)
         return 0
     if not yes:

@@ -83,7 +83,7 @@ def test_save_creates_self_ignoring_folder(project: Path) -> None:
     md = handoff.render(handoff.validate(FULL), project.name, WHEN)
     path, rel = handoff.save(project, md, "ab12cd34", WHEN)
     assert rel == ".cigar/handoffs/2026-10-24T0130-ab12.md"
-    assert path.read_text() == md
+    assert path.read_text(encoding="utf-8") == md
     assert (project / ".cigar" / ".gitignore").read_text() == "*\n"
     assert not (project / ".gitignore").exists()
     _, rel2 = handoff.save(project, md, "ab12cd34", WHEN)

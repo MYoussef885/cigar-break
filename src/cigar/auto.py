@@ -27,7 +27,7 @@ def mark_ready(home: Path, session_id: str, handoff: str) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".tmp")
     marker = {"state": "ready", "session": session_id, "handoff": handoff, "ts": time.time()}
-    tmp.write_text(json.dumps(marker))
+    tmp.write_text(json.dumps(marker), encoding="utf-8")
     tmp.replace(path)
     return path
 
@@ -41,7 +41,7 @@ def take_fired(home: Path, max_age: float = FIRED_MAX_AGE_SECONDS) -> str | None
     cutoff = time.time() - max_age
     for path in folder.glob("*.json"):
         try:
-            marker = json.loads(path.read_text())
+            marker = json.loads(path.read_text(encoding="utf-8"))
             if marker.get("state") != "fired" or path.stat().st_mtime < cutoff:
                 continue
             handoff = marker.get("handoff")
@@ -63,7 +63,7 @@ def prune(home: Path, max_age: float = MAX_AGE_SECONDS) -> None:
     cutoff = time.time() - max_age
     for path in folder.glob("*.json"):
         try:
-            fired = json.loads(path.read_text()).get("state") == "fired"
+            fired = json.loads(path.read_text(encoding="utf-8")).get("state") == "fired"
             if fired or path.stat().st_mtime < cutoff:
                 path.unlink()
         except (OSError, ValueError, AttributeError):

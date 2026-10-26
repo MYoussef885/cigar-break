@@ -10,7 +10,13 @@ from cigar import cli, config
 
 SKILLS = ROOT / "skills"
 ALL_SKILLS = sorted(p.name for p in SKILLS.iterdir() if (p / "SKILL.md").exists())
-SHELL_SKILLS = [n for n in ALL_SKILLS if "\n!`" in (SKILLS / n / "SKILL.md").read_text()]
+
+
+def skill_text(name: str) -> str:
+    return (SKILLS / name / "SKILL.md").read_text(encoding="utf-8")
+
+
+SHELL_SKILLS = [n for n in ALL_SKILLS if "\n!`" in skill_text(n)]
 
 
 def test_mode_show_and_set(cigar_home: Path, capsys: pytest.CaptureFixture[str]) -> None:
@@ -39,7 +45,7 @@ def test_every_skill_is_checked() -> None:
 
 @pytest.mark.parametrize("name", ALL_SKILLS)
 def test_skills_are_user_only_and_short(name: str) -> None:
-    text = (SKILLS / name / "SKILL.md").read_text()
+    text = skill_text(name)
     front = text.split("---")[1]
     assert f"name: {name}" in front
     assert "disable-model-invocation: true" in front
@@ -54,7 +60,5 @@ def test_skills_are_user_only_and_short(name: str) -> None:
 @pytest.mark.parametrize("name", SHELL_SKILLS)
 def test_skill_shell_lines_never_abort(name: str) -> None:
     # A non-zero exit aborts a skill's inline shell and hides the output (D-014).
-    lines = [
-        ln for ln in (SKILLS / name / "SKILL.md").read_text().splitlines() if ln.startswith("!")
-    ]
+    lines = [ln for ln in skill_text(name).splitlines() if ln.startswith("!")]
     assert lines and all(ln.endswith("2>&1 || true`") for ln in lines)

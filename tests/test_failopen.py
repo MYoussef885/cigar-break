@@ -31,7 +31,7 @@ def run_hook(event: str, stdin: bytes, home: Path) -> subprocess.CompletedProces
 
 
 def log_text(home: Path) -> str:
-    return "".join(p.read_text() for p in (home / "logs").glob("*.log"))
+    return "".join(p.read_text(encoding="utf-8") for p in (home / "logs").glob("*.log"))
 
 
 def valid_payload(project: Path, transcript: Path | str) -> bytes:
@@ -180,7 +180,17 @@ def _old_python() -> bool:
     return out.stdout.strip() == "True"
 
 
-@pytest.mark.skipif(not _old_python(), reason="needs a /usr/bin/python3 older than 3.11")
+def _newer_python_outside_home() -> bool:
+    """The launcher also searches fixed folders (GitHub's macOS runners have Homebrew's)."""
+    launch = load_launch()
+    dirs = ["/usr/bin", "/bin", *(d for d in launch.EXTRA_DIRS if not d.startswith("~"))]
+    return any(os.access(os.path.join(d, n), os.X_OK) for d in dirs for n in launch.CANDIDATES)
+
+
+@pytest.mark.skipif(
+    not _old_python() or _newer_python_outside_home(),
+    reason="needs a machine whose only python3 outside HOME is older than 3.11",
+)
 def test_machine_with_only_an_old_python3(tmp_path: Path, project: Path) -> None:
     """D-026: exactly one clear SessionStart warning, and no errors anywhere."""
     home = tmp_path / "home"  # hides ~/.local/bin and uv's Pythons
