@@ -1,0 +1,37 @@
+$ CIGAR_HOME=<scratch>/sim cigar share --dry-run --model claude-sonnet-5-5
+This is everything `cigar share` would publish, as a GitHub issue on MYoussef885/cigar-break:
+aggregate counts per 10k-token bucket for one model. No paths, project names, code, prompts or user identifiers.
+The model ID is sent as written.
+{
+  "schema_version": 1,
+  "cigar_version": "0.1.0",
+  "harness": "simulated",
+  "model": "claude-sonnet-5-5",
+  "window": "200k",
+  "sessions": 120,
+  "events": 8541,
+  "buckets": [
+    {"lo": 20000, "hi": 30000, "events": 36, "weight": 4.3},
+    {"lo": 30000, "hi": 40000, "events": 654, "weight": 44.6},
+    {"lo": 40000, "hi": 50000, "events": 904, "weight": 69.2},
+    {"lo": 50000, "hi": 60000, "events": 907, "weight": 64.2},
+    {"lo": 60000, "hi": 70000, "events": 871, "weight": 64.1},
+    {"lo": 70000, "hi": 80000, "events": 842, "weight": 69.6},
+    {"lo": 80000, "hi": 90000, "events": 786, "weight": 55.9},
+    {"lo": 90000, "hi": 100000, "events": 682, "weight": 62.2},
+    {"lo": 100000, "hi": 110000, "events": 646, "weight": 48.3},
+    {"lo": 110000, "hi": 120000, "events": 580, "weight": 58.7},
+    {"lo": 120000, "hi": 130000, "events": 468, "weight": 59.4},
+    {"lo": 130000, "hi": 140000, "events": 377, "weight": 74.6},
+    {"lo": 140000, "hi": 150000, "events": 304, "weight": 59.6},
+    {"lo": 150000, "hi": 160000, "events": 218, "weight": 57.2},
+    {"lo": 160000, "hi": 170000, "events": 146, "weight": 49.0},
+    {"lo": 170000, "hi": 180000, "events": 88, "weight": 30.8},
+    {"lo": 180000, "hi": 190000, "events": 32, "weight": 11.9}
+  ],
+  "knee": 110000,
+  "confidence": "high",
+  "default_knee": 100000
+}
+Other curves you can share instead: --model claude-opus-5-5 --window 1m
+Dry run: nothing was opened or sent.

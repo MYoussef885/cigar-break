@@ -1,0 +1,5 @@
+$ uv run python scripts/estimator_check.py
+200k window, 120 sessions, knees [80, 95, 110, 125, 140]k x 20 seeds: 100/100 recovered within +-10k
+1m window, 80 sessions, knees [150, 170, 220]k x 20 seeds: 60/60 recovered within +-10k
+flat data (no knee), 40 sessions x 30 seeds: spurious knee in 1/30
+flat data (no knee), 120 sessions x 30 seeds: spurious knee in 0/30

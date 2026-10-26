@@ -1,0 +1,70 @@
+claude-sonnet-5-5 (200k window): 120 sessions, 8541 events, knee 110000
+claude-opus-5-5 (1m window): 80 sessions, 10438 events, knee 170000
+Wrote <scratch>/sim/cigar.db. Try: CIGAR_HOME=<scratch>/sim python3 bin/cigar report
+
+$ CIGAR_HOME=<scratch>/sim cigar report --html
+Cigar report · where my agent gets tired · 2026-10-26
+
+claude-opus-5-5 · 1M window · 80 sessions · 10,438 tool calls
+Learned knee ~170k (high confidence; replaces the default 160k).
+Baseline: 0.085 signal weight per tool call.
+    20k–30k  0.036 ░                                 28
+    30k–40k  0.061 ██                               466
+    40k–50k  0.091 ████                             584
+    50k–60k  0.067 ███                              592
+    60k–70k  0.089 ████                             606
+    70k–80k  0.080 ███                              600
+    80k–90k  0.101 ████                             603
+   90k–100k  0.085 ███                              599
+  100k–110k  0.075 ███                              581
+  110k–120k  0.090 ████                             549
+  120k–130k  0.073 ███                              513
+  130k–140k  0.077 ███                              469
+  140k–150k  0.088 ████                             417
+  150k–160k  0.075 ███                              393
+  160k–170k  0.083 ███                              377  ◀ default knee
+  170k–180k  0.107 ████                             364  ◀ learned knee
+  180k–190k  0.125 █████                            328
+  190k–200k  0.204 ████████                         309
+  200k–210k  0.223 █████████                        322
+  210k–220k  0.225 █████████                        293
+  220k–230k  0.286 ████████████                     260
+  230k–240k  0.302 ████████████                     246
+  240k–250k  0.356 ██████████████                   235
+  250k–260k  0.446 ██████████████████               192
+  260k–270k  0.508 █████████████████████            161
+  270k–280k  0.480 ███████████████████              142
+  280k–290k  0.604 ████████████████████████          98
+  290k–300k  0.601 ████████████████████████          68
+  300k–310k  0.741 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    27
+  310k–320k  0.700 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░      15
+  320k–330k  0.000                                    1
+Compactions: 17 (median at 250k; shown, not used in the fit).
+░ rows have fewer than 50 calls or 3 sessions and don't count. The last column is tool calls.
+
+claude-sonnet-5-5 · 200k window · 120 sessions · 8,541 tool calls
+Learned knee ~110k (high confidence; replaces the default 100k).
+Baseline: 0.072 signal weight per tool call.
+    20k–30k  0.119 ░░░░░░░░░░                        36
+    30k–40k  0.068 ██████                           654
+    40k–50k  0.077 ██████                           904
+    50k–60k  0.071 ██████                           907
+    60k–70k  0.074 ██████                           871
+    70k–80k  0.083 ███████                          842
+    80k–90k  0.071 ██████                           786
+   90k–100k  0.091 ███████                          682
+  100k–110k  0.075 ██████                           646  ◀ default knee
+  110k–120k  0.101 ████████                         580  ◀ learned knee
+  120k–130k  0.127 ██████████                       468
+  130k–140k  0.198 ████████████████                 377
+  140k–150k  0.196 ████████████████                 304
+  150k–160k  0.262 █████████████████████            218
+  160k–170k  0.336 ███████████████████████████      146
+  170k–180k  0.350 ████████████████████████████      88
+  180k–190k  0.372 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░    32
+Compactions: 22 (median at 155k; shown, not used in the fit).
+░ rows have fewer than 50 calls or 3 sessions and don't count. The last column is tool calls.
+
+Signal rate = failures, repeated calls, re-reads, undone edits and failed checks per tool call, weighted as in Cigar's score.
+
+HTML report: <scratch>/sim/reports/2026-10-26.html

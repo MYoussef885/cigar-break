@@ -1,0 +1,6 @@
+$ uv run pytest tests/test_perf.py -s   (macOS 26.0.1, Apple M4, 2026-10-26)
+hook perf: 200 runs, transcript 5.0 MB, python3 on PATH = /usr/bin/python3 (3.9.6)
+  end to end (process start to exit): p50 74.9 ms, p95 81.1 ms, max 91.9 ms
+  inside the hook (parse, store, transcript, score): p50 2.6 ms, p95 2.8 ms
+
+Knee refit at SessionStart (at most once an hour), simulated store of 18,979 events: 34-39 ms.

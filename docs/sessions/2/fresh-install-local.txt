@@ -1,0 +1,41 @@
+$ scripts/fresh_install_check.sh <checkout>   (local-path marketplace; the GitHub run waits for the repo to be public)
+== claude 2.1.309 (Claude Code) · HOME=<temp> · source <checkout>
+$ claude plugin marketplace add <checkout>
+Adding marketplace…✔ Successfully added marketplace: cigar-break (declared in user settings)
+$ claude plugin install cigar@cigar-break
+Installing plugin "cigar@cigar-break"...✔ Successfully installed plugin: cigar@cigar-break (scope: user)
+$ claude plugin details cigar
+cigar 0.1.0
+  Description: Notices when a long session starts to slip, saves a structured handoff, and restores it after /clear.
+  Source: cigar@cigar-break
+
+Component inventory
+  Skills (5)  break, mode, report, share, status
+  Agents (0)
+  Hooks (7)  SessionStart, PostToolUse, PostToolUseFailure, PostModelSwitch, PreCompact, Stop, SessionEnd  (harness-only — no model context cost)
+  MCP servers (1)  cigar  (tool schemas resolved at runtime; not counted)
+  LSP servers (0)
+
+Projected token cost
+$ claude mcp list
+Checking MCP server health…
+
+plugin:cigar:cigar: python3 -I -S ~/Documents/cigar-break/bin/cigar-mcp - ✔ Connected
+== installed at <temp>/home/.claude/plugins/cache/cigar-break/cigar/0.1.0
+== hooks with the normal PATH (python3 is Python 3.9.6; a 3.11+ is findable)
+ [exit 0]
+ [exit 0]
+hook session_start ok ms=11.9
+hook post_tool_use ok ms=1.9
+== hooks when only an old python3 is on PATH (PATH=/usr/bin:/bin, Python 3.9.6)
+{"systemMessage": "Cigar is inactive: it needs Python 3.11 or newer, and python3 here is 3.9. Install one (for example `uv python install 3.12`) and Cigar will find it."}
+ [exit 0]
+ [exit 0]
+ [exit 0]
+{"jsonrpc": "2.0", "id": 1, "result": {"protocolVersion": "2025-11-25", "capabilities": {"tools": {"listChanged": false}}, "serverInfo": {"name": "cigar", "version": "inactive (needs Python 3.11+)"}}}
+{"jsonrpc": "2.0", "id": 2, "result": {"tools": []}}
+ [mcp exit 0]
+== done
+
+$ python3 scripts/config_guard.py diff <before>   (D-027)
+owner config unchanged (62 entries checked)
