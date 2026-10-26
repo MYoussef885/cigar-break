@@ -33,7 +33,7 @@ def db() -> Store:
 
 
 def logs_text(home: Path) -> str:
-    return "".join(p.read_text() for p in (home / "logs").glob("*.log"))
+    return "".join(p.read_text(encoding="utf-8") for p in (home / "logs").glob("*.log"))
 
 
 @pytest.fixture
@@ -366,3 +366,14 @@ def test_configured_window_is_stored(
     assert run_hook("post_tool_use", payload(project, t))[1] == ""  # 150k < 1M knee of 140k x 1.3
     with db() as s:
         assert s.get_session("sess-1")["context_window"] == "1m"
+
+
+def test_hook_output_is_ascii(project: Path, at_140k: Path) -> None:
+    """A Windows console encoding can't print the emoji; escaped JSON always can (D-030)."""
+    nudge = run_hook("post_tool_use", payload(project, at_140k))[1]
+    save_handoff(project)
+    start = {"session_id": "sess-2", "source": "clear", "cwd": str(project)}
+    restore = run_hook("session_start", start)[1]
+    for out in (nudge, restore):
+        assert out and out.isascii()
+        assert json.loads(out)["systemMessage"].startswith("🚬 Cigar")

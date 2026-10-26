@@ -259,7 +259,8 @@ def main(argv: list[str] | None = None) -> int:
     logs.write(f"hook {event} {outcome} ms={ms:.1f}{' output' if output else ''}")
     if output:
         try:
-            sys.stdout.write(json.dumps(output, ensure_ascii=False) + "\n")
+            # ASCII-escaped: a Windows console encoding can't print the emoji (D-030).
+            sys.stdout.write(json.dumps(output) + "\n")
             sys.stdout.flush()
         except BaseException as exc:
             logs.error(f"hook {event} write", exc)
