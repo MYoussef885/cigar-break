@@ -253,3 +253,69 @@ Check each one on the owner's machine and record what is true:
   - Never write to `~/.claude/settings.json`, `~/.claude.json` or the owner's real `~/.cigar/` during tests. Tests use `CIGAR_HOME` pointing at a temp directory.
   - Before and after any probe, diff the owner's real config files. Report any difference immediately.
 - **Why:** in Session 1, a probe changed the owner's default model and a permission setting. It was restored, but for a tool whose promise is "never harm the session", this has to be impossible by construction, not just restored afterwards.
+
+**D-028 · The plugin's MCP config lives in `plugin.json`, not a repo-root `.mcp.json`.** 2026-10-26 · Accepted
+- **Decision:** `mcpServers` moved inline into `.claude-plugin/plugin.json`; the repo-root `.mcp.json` is deleted.
+- **Why:** Claude Code also reads a repo-root `.mcp.json` as a *project* MCP server for anyone who opens the repo. There `${CLAUDE_PLUGIN_ROOT}` is unset, so every Claude Code session in this repo, including this one, showed a failed `cigar` server (`CONNECTION_CLOSED`). Contributors who cloned the public repo would have hit it too.
+- **Consequences:** verified with `claude plugin validate .` and a temp-`HOME` install: `claude mcp list` shows `plugin:cigar:cigar … ✔ Connected`.
+
+**D-029 · Knee estimator details.** 2026-10-26 · Accepted
+- **Decision** (architecture §9 leaves these open):
+  - Fits are per (model, window label). A session without a stored window counts as `200k`. Cigar's own tool calls and subagent events are left out.
+  - Baseline: the median rate of the counting buckets that hold the lowest 40% of their events, with a floor of 0.02 so a near-zero baseline can't turn any blip into a knee.
+  - The knee bucket's own rate must also be above baseline. Without that, a sharp rise was reported one or two flat buckets early (rates 0.08, 0.08, 0.3 already average 1.5× baseline). The three-bucket run must be complete.
+  - Learned knees are cached in `meta` (`knee:<model>:<window>`). SessionStart refits at most once an hour, and `cigar report` and `cigar share` refit on demand. The tool-call hook only reads the cache, so its p95 is unchanged (81 ms end to end, 2.8 ms inside).
+  - The simulator plants a ramp: the rate is flat, then rises by 0.5× baseline per 10k tokens. It writes 120 sessions for 200k and 80 for 1M over six weeks (two to three a day). At 30–40 sessions, single-bucket noise (about ±20%) pushed errors past ±10k.
+- **Evidence:** `scripts/estimator_check.py`: 160/160 seeded runs within ±10k (knees 80k–220k, both windows); spurious knees on flat data in 1/30 runs at 40 sessions and 0/30 at 120.
+- **Consequences:** the refit costs about 35 ms per 19k events and grows linearly, so after a year of heavy use (about 365k events) SessionStart pays about 0.7 s once an hour. An event retention window is a candidate for later.
+
+**D-030 · Cross-platform fixes found by CI.** 2026-10-26 · Accepted
+- **Decision:**
+  - Hook output is ASCII-escaped JSON. A Windows console encoding (cp1252) couldn't print 🚬, so the write failed (fail-open held) and the nudge was lost.
+  - The store migrates under `BEGIN IMMEDIATE` first and switches to WAL afterwards with a 2 s retry. `PRAGMA journal_mode` ignores the busy timeout, and eight concurrent first opens on Windows hit "database is locked".
+  - Files are read and written as explicit UTF-8.
+  - CI runs the performance test and prints its numbers but doesn't assert the 150 ms target: a shared Ubuntu runner showed p95 193 ms with p50 48 ms. NFR-2 is measured on a developer machine (`docs/sessions/2/perf.txt`).
+  - The only-old-Python test skips where a newer Python sits in a fixed search folder (GitHub's macOS runners have Homebrew's). The chmod-unreadable transcript case skips on Windows and as root.
+- **Why:** each fix has a test. Windows is still "tests pass in CI, no live session" (D-013).
+
+**D-031 · Auto mode safety, as built for D-026.** 2026-10-26 · Accepted
+- **Decision:**
+  - A `take_break` counts as a break (and, in auto mode, writes the `ready` marker) only if the store holds a pending handoff for the project created since this session started. The tool reporting success is not enough. There is no grace window, so a handoff saved before the session started never counts.
+  - The marker carries the handoff's path, and `mods/auto.ts` refuses a marker without one (including Session 1's format). The mod's toast is gone.
+  - SessionStart(clear) reads the fired marker. The one line the developer sees is "🚬 Cigar auto mode cleared the context and restored the handoff from <path>.", or a line saying the handoff could not be restored.
+  - The proof runs the real mod under node (v22.18 or newer strips the types) with a fake `$` (`tests/mod_harness.mjs`); CI installs node 24.
+- **Why:** Session 1's hook marked the session ready on any successful `take_break` call, without checking that a handoff was saved.
+
+**D-032 · Sharing details.** 2026-10-26 · Accepted
+- **Decision:**
+  - One payload per (model, window), with a top-level `window` label (`200k` or `1m`), the only form of the window that is shared (D-026).
+  - `harness` is reduced to `claude-code`, `simulated` or `other`, because a custom harness name could identify someone.
+  - Model IDs must match a plain charset, with no leading `/`, `~` or `.`, no `//` and no spaces. Fine-tune IDs (`ft:…` or more than one `:`) are refused because they can name an organization.
+  - One allowlist validator (`share.problems`) runs before showing and again at ingest; ingest also rejects `simulated` curves.
+  - `/cigar:share` shows the payload and saves it for an hour; `/cigar:share confirm` publishes exactly that payload, never a recomputed one.
+  - Cigar never makes the network call itself: it opens a prefilled issue in the browser, or prints the URL.
+- **Open question for the owner:** the issue form's consent line says curves are published "under the repository's license" (MIT). A data license such as CC0 may suit `data/curves/` better.
+
+**D-033 · Any agent: `record_event` and `cigar.track`.** 2026-10-26 · Accepted
+- **Decision:**
+  - `record_event` requires `session_id`, `tool`, `ok`, `context_tokens` and `model`. It also takes optional `kind` (read, edit, shell or other), `path`, `args` (hashed, never stored) and `exit_code`, because other agents' tool names don't map to Claude Code's.
+  - Rejected calls aren't recorded. Sessions are labelled `mcp`, `python` or the given harness.
+  - The hook, `record_event` and `Tracker` share one core (`track.record`), so the nudge policy, cooldown and cap are the same everywhere.
+- **Tested clients:** only the official MCP Python SDK 2.3.0. No other MCP client is installed on the owner's machine: the Codex, Gemini, Goose, opencode and Cursor CLIs are all absent. The README says so (FR-M3).
+
+**D-034 · Under an old Python, the MCP launcher answers with no tools.** 2026-10-26 · Accepted
+- **Decision:** with no Python 3.11+ found, `bin/cigar-mcp` serves a minimal JSON-RPC stub (`initialize`, an empty `tools/list`, `ping`) instead of exiting 1.
+- **Why:** D-026 asks for exactly one clear warning and no errors on such a machine. A crashing server would show as a failed MCP server next to the SessionStart warning.
+
+**D-035 · How Session 2 probed Claude Code under D-027.** 2026-10-26 · Accepted
+- **Decision:** probes use a temp `HOME` (chosen over `CLAUDE_CONFIG_DIR`) and drop every `CLAUDE_*` variable. `scripts/config_guard.py` snapshots the owner's real config before each probe and diffs it after; every diff was clean.
+- **Finding:** both a temp `HOME` and `CLAUDE_CONFIG_DIR` start "Not logged in", so model-driven probes in an isolated config need an owner login. Session 2 therefore probes only what runs without a model: install, plugin inventory, `mcp list` and the installed hooks. Live-session checks are in the owner's checklist.
+- **Also found:** with a local-path marketplace, the installed MCP command points at the source checkout while hooks run from the cache copy.
+
+**D-036 · Packaging.** 2026-10-26 · Accepted (resolves D-012)
+- **Decision:**
+  - The PyPI name is `cigar-break`: free on PyPI and TestPyPI on 2026-10-26.
+  - Version 0.1.0 is set in `pyproject.toml`, `plugin.json` and `__init__.py`. The sdist holds only the package, README, LICENSE and CHANGELOG. `cigar-mcp` is an entry point.
+  - Install syntax was verified on 2.1.309 as the CLI forms of the two slash commands: `claude plugin marketplace add <source>` then `claude plugin install cigar@cigar-break`. The slash forms inside a session are in the owner's checklist.
+  - The validator also suggests a one-step `/plugin install cigar --marketplace MYoussef885/cigar-break` (2.1.275+). It is untested, so it's not in the README.
+  - `scripts/publish.sh` reads the token without echo; nothing is stored.
