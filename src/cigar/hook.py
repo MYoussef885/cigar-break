@@ -46,18 +46,24 @@ def _session_id(payload: Payload) -> str:
 
 
 # --- handlers -------------------------------------------------------------------
-def session_start(payload: Payload, cfg: config.Config) -> Output:
-    output = _session_start(payload, cfg)
-    try:  # learning must never cost the restore above
-        with Store.open(cfg.db_path) as store:
-            if track.refresh_knees(store) is not None:
-                logs.write("knees refit", cfg.home)
+def _refresh_knees(store: Store, cfg: config.Config) -> None:
+    """Refit learned knees (throttled). Learning must never cost the restore."""
+    try:
+        if track.refresh_knees(store) is not None:
+            logs.write("knees refit", cfg.home)
     except Exception as exc:
         logs.error("knee refresh", exc, cfg.home)
-    return output
 
 
-def _session_start(payload: Payload, cfg: config.Config) -> Output:
+def session_start(payload: Payload, cfg: config.Config) -> Output:
+    with Store.open(cfg.db_path) as store:
+        try:
+            return _session_start(store, payload, cfg)
+        finally:
+            _refresh_knees(store, cfg)
+
+
+def _session_start(store: Store, payload: Payload, cfg: config.Config) -> Output:
     from cigar import handoff
 
     sid = _session_id(payload)
@@ -65,23 +71,22 @@ def _session_start(payload: Payload, cfg: config.Config) -> Output:
     model = payload.get("model") if isinstance(payload.get("model"), str) else None
     project_dir = _project_dir(payload)
     project = project_hash(str(project_dir))
-    with Store.open(cfg.db_path) as store:
-        store.touch_session(sid, project, model=model, source=source)
-        fired = auto.take_fired(cfg.home) if source == "clear" else None
-        auto.prune(cfg.home)
-        if source not in ("clear", "compact"):
-            logs.prune(cfg.home)
-            return None
-        pending = store.pending_handoff(project, defaults.HANDOFF_MAX_AGE_SECONDS)
-        markdown = handoff.load(project_dir, pending["path"]) if pending else None
-        if not pending or markdown is None:
-            if pending:
-                logs.write(f"restore skipped: handoff file missing ({pending['path']})", cfg.home)
-            if fired:
-                return {"systemMessage": AUTO_NOT_RESTORED.format(path=fired)}
-            return None
-        text = handoff.for_injection(markdown, pending["path"])
-        store.consume_handoff(pending["id"])
+    store.touch_session(sid, project, model=model, source=source)
+    fired = auto.take_fired(cfg.home) if source == "clear" else None
+    auto.prune(cfg.home)
+    if source not in ("clear", "compact"):
+        logs.prune(cfg.home)
+        return None
+    pending = store.pending_handoff(project, defaults.HANDOFF_MAX_AGE_SECONDS)
+    markdown = handoff.load(project_dir, pending["path"]) if pending else None
+    if not pending or markdown is None:
+        if pending:
+            logs.write(f"restore skipped: handoff file missing ({pending['path']})", cfg.home)
+        if fired:
+            return {"systemMessage": AUTO_NOT_RESTORED.format(path=fired)}
+        return None
+    text = handoff.for_injection(markdown, pending["path"])
+    store.consume_handoff(pending["id"])
     logs.write(
         f"restore session={sid[:8]} source={source} chars={len(text)} auto={bool(fired)}", cfg.home
     )

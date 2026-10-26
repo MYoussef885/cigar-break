@@ -377,3 +377,19 @@ def test_hook_output_is_ascii(project: Path, at_140k: Path) -> None:
     for out in (nudge, restore):
         assert out and out.isascii()
         assert json.loads(out)["systemMessage"].startswith("🚬 Cigar")
+
+
+def test_failing_knee_refit_never_costs_the_restore(
+    project: Path, cigar_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from cigar import track
+
+    def broken(*args: Any, **kwargs: Any) -> None:
+        raise RuntimeError("refit failed")
+
+    monkeypatch.setattr(track, "refresh_knees", broken)
+    save_handoff(project)
+    start = {"session_id": "sess-2", "source": "clear", "cwd": str(project)}
+    data = json.loads(run_hook("session_start", start)[1])
+    assert data["systemMessage"].startswith("🚬 Cigar: restored the handoff")
+    assert "ERROR knee refresh: RuntimeError: refit failed" in logs_text(cigar_home)
