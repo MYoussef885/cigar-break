@@ -138,3 +138,70 @@ def test_launcher_runs_under_the_python3_on_path(cigar_home: Path, project: Path
     result = run_hook("session_start", json.dumps(payload).encode(), cigar_home)
     assert (result.returncode, result.stdout) == (0, b"")
     assert "hook session_start ok" in log_text(cigar_home)
+
+
+def test_too_old_python_mcp_answers_with_no_tools(
+    cigar_home: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    launch = load_launch()
+    monkeypatch.setattr(sys, "version_info", (3, 9, 6, "final", 0))
+    monkeypatch.setattr(launch, "_find_python", lambda: None)
+    requests = [
+        {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {"protocolVersion": "x"}},
+        {"jsonrpc": "2.0", "method": "notifications/initialized"},
+        {"jsonrpc": "2.0", "id": 2, "method": "tools/list"},
+        {"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "status"}},
+    ]
+    monkeypatch.setattr(sys, "stdin", io.StringIO("".join(json.dumps(r) + "\n" for r in requests)))
+    out = io.StringIO()
+    monkeypatch.setattr(sys, "stdout", out)
+    monkeypatch.setattr(sys, "argv", ["cigar-mcp"])
+    with pytest.raises(SystemExit) as exit_info:
+        launch.run("mcp", "cigar.mcp_server", str(BIN / "cigar-mcp"))
+    assert exit_info.value.code == 0
+    replies = [json.loads(line) for line in out.getvalue().splitlines()]
+    assert [r["id"] for r in replies] == [1, 2, 3]
+    assert replies[0]["result"]["protocolVersion"] == "x"
+    assert replies[1]["result"] == {"tools": []}
+    assert replies[2]["error"]["code"] == -32601
+
+
+OLD_PYTHON = Path("/usr/bin/python3")
+
+
+def _old_python() -> bool:
+    if not OLD_PYTHON.exists():
+        return False
+    out = subprocess.run(
+        [str(OLD_PYTHON), "-c", "import sys; print(sys.version_info < (3, 11))"],
+        capture_output=True,
+        text=True,
+    )
+    return out.stdout.strip() == "True"
+
+
+@pytest.mark.skipif(not _old_python(), reason="needs a /usr/bin/python3 older than 3.11")
+def test_machine_with_only_an_old_python3(tmp_path: Path, project: Path) -> None:
+    """D-026: exactly one clear SessionStart warning, and no errors anywhere."""
+    home = tmp_path / "home"  # hides ~/.local/bin and uv's Pythons
+    home.mkdir()
+    env = {"PATH": "/usr/bin:/bin", "HOME": str(home)}
+
+    def launch(name: str, arg: str | None, stdin: bytes) -> subprocess.CompletedProcess[bytes]:
+        args = [str(OLD_PYTHON), "-I", "-S", str(BIN / name), *([arg] if arg else [])]
+        return subprocess.run(args, input=stdin, capture_output=True, env=env, timeout=30)
+
+    start = json.dumps({"session_id": "s", "source": "startup", "cwd": str(project)}).encode()
+    first, second = (
+        launch("cigar-hook", "session_start", start),
+        launch("cigar-hook", "session_start", start),
+    )
+    tool = launch("cigar-hook", "post_tool_use", valid_payload(project, "/nope"))
+    init = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {}}
+    mcp = launch("cigar-mcp", None, (json.dumps(init) + "\n").encode())
+    for result in (first, second, tool, mcp):
+        assert (result.returncode, result.stderr) == (0, b"")
+    warning = json.loads(first.stdout)["systemMessage"]
+    assert warning.startswith("Cigar is inactive: it needs Python 3.11 or newer")
+    assert (second.stdout, tool.stdout) == (b"", b"")
+    assert json.loads(mcp.stdout)["result"]["serverInfo"]["name"] == "cigar"

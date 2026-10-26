@@ -56,12 +56,46 @@ def _find_python():
     return found
 
 
+def _stub_mcp():
+    """Answer MCP with no tools, so an old Python shows one warning and no failed server."""
+    for line in iter(sys.stdin.readline, ""):
+        try:
+            msg = json.loads(line)
+        except ValueError:
+            continue
+        if not isinstance(msg, dict) or "id" not in msg:
+            continue
+        method = msg.get("method")
+        if method == "initialize":
+            params = msg.get("params") or {}
+            result = {
+                "protocolVersion": params.get("protocolVersion") or "2025-11-25",
+                "capabilities": {"tools": {"listChanged": False}},
+                "serverInfo": {"name": "cigar", "version": "inactive (needs Python 3.11+)"},
+            }
+        elif method == "tools/list":
+            result = {"tools": []}
+        elif method == "ping":
+            result = {}
+        else:
+            reply = {"code": -32601, "message": "Method not found"}
+            sys.stdout.write(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "error": reply}))
+            sys.stdout.write("\n")
+            sys.stdout.flush()
+            continue
+        sys.stdout.write(json.dumps({"jsonrpc": "2.0", "id": msg["id"], "result": result}) + "\n")
+        sys.stdout.flush()
+    sys.exit(0)
+
+
 def _too_old(kind, argv):
     version = "%d.%d" % sys.version_info[:2]
     msg = (
         "Cigar is inactive: it needs Python 3.11 or newer, and python3 here is %s. "
         "Install one (for example `uv python install 3.12`) and Cigar will find it." % version
     )
+    if kind == "mcp":
+        _stub_mcp()
     if kind != "hook":
         sys.stderr.write(msg + "\n")
         sys.exit(1)
