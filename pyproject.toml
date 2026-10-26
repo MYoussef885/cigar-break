@@ -1,6 +1,6 @@
 [project]
 name = "cigar-break"
-version = "0.1.0.dev0"
+version = "0.1.0"
 description = "Detects when a coding agent's session is degrading, gets a structured handoff, and restores it after a context reset."
 readme = "README.md"
 license = "MIT"
@@ -22,6 +22,9 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cigar"]
+
+[tool.hatch.build.targets.sdist]
+include = ["/src/cigar", "/README.md", "/LICENSE", "/CHANGELOG.md", "/pyproject.toml"]
 
 [tool.ruff]
 line-length = 100
