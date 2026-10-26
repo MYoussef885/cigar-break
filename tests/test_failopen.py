@@ -84,6 +84,8 @@ def test_bad_transcript(kind: str, cigar_home: Path, project: Path, tmp_path: Pa
     elif kind == "directory":
         path.mkdir()
     elif kind == "unreadable":
+        if os.name == "nt" or os.geteuid() == 0:
+            pytest.skip("chmod can't make a file unreadable here (Windows, or root)")
         write_jsonl(path, [assistant(150_000)])
         path.chmod(0)
     elif kind == "huge-line":
