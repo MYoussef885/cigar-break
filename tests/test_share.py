@@ -199,3 +199,11 @@ def test_ingest_round_trip(real_looking: Path, tmp_path: Path) -> None:
     ]
     assert json.loads(written[0].read_text()) == sent
     assert [s.split(":")[0] for s in skipped] == ["#8", "#9", "#10"]
+
+
+def test_pretty_is_the_same_json(real_looking: Path) -> None:
+    payload = payload_now()
+    text = share.pretty(payload)
+    assert json.loads(text) == payload
+    bucket_lines = [ln for ln in text.splitlines() if ln.strip().startswith('{"lo"')]
+    assert len(bucket_lines) == len(payload["buckets"])

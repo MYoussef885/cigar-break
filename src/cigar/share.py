@@ -165,6 +165,18 @@ def issue_url(payload: dict, limit: int = MAX_URL) -> tuple[str, dict]:
         payload["buckets"].remove(smallest)
 
 
+def pretty(payload: dict) -> str:
+    """Valid JSON, one bucket per line, so the developer can read all of it."""
+    rows = []
+    for key, value in payload.items():
+        if key == "buckets":
+            inner = ",\n".join(f"    {json.dumps(b)}" for b in value)
+            rows.append(f'  "buckets": [\n{inner}\n  ]')
+        else:
+            rows.append(f"  {json.dumps(key)}: {json.dumps(value)}")
+    return "{\n" + ",\n".join(rows) + "\n}"
+
+
 def choose(fits: Sequence[Fit], model: str | None, window: str | None) -> Fit | None:
     for f in fits:
         if (model is None or f.model == model) and (window is None or f.window == window):
@@ -235,7 +247,7 @@ def run(
             print("The saved payload failed its check; nothing was shared.", file=out)
             return 1
         print("Sharing the payload shown before:", file=out)
-        print(json.dumps(saved["payload"], indent=2), file=out)
+        print(pretty(saved["payload"]), file=out)
         return _publish(saved["payload"], out)
 
     fit = choose(fits, model, window)
@@ -251,7 +263,7 @@ def run(
         print("This curve can't be shared safely: " + "; ".join(issues) + ".", file=out)
         return 1
     print(PREAMBLE.format(repo=REPO), file=out)
-    print(json.dumps(payload, indent=2), file=out)
+    print(pretty(payload), file=out)
     others = [f for f in fits if f is not fit]
     if others:
         names = ", ".join(f"--model {f.model} --window {f.window}" for f in others)
