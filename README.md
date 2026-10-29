@@ -4,8 +4,6 @@
 
 Two hours into a long Claude Code session the agent starts failing tool calls, re-reading files it already read and undoing its own edits. By the time you notice, you've lost twenty minutes; if you reset too early, you lose your place. Cigar watches for those signs, which the session already produces, and offers the agent a *cigar break*: write a structured handoff, reset the context, pick up from the handoff in a fresh one.
 
-![Cigar's auto break in the terminal](docs/demo.gif)
-
 In auto mode (opt-in, terminal), the whole break happens by itself. An illustrative session; the 🚬 lines are Cigar's own messages:
 
 ```

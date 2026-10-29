@@ -328,3 +328,12 @@ Check each one on the owner's machine and record what is true:
   - The README's sharing section has one line about it, and its License section names both licenses.
 - **D-029:** the event retention window is listed under Later in `roadmap.md`.
 - **D-030 is accepted:** CI prints the 150 ms performance target but doesn't assert it; NFR-2 is measured on the owner's machine (`docs/sessions/2/perf.txt`).
+
+**D-038 · PyPI trusted publishing, no tokens.** 2026-10-29 · Accepted (owner)
+- **Decision:**
+  - `.github/workflows/release.yml` builds with uv, runs the same wheel check as CI's `package` job (the MCP SDK client against the wheel's `cigar-mcp`), and publishes with `pypa/gh-action-pypi-publish`, pinned to the v1.14.2 commit SHA (v1.14.3 was 9 days old).
+  - A manual run (`workflow_dispatch`) publishes to TestPyPI in the `testpypi` environment; a `v*` tag push publishes to PyPI in the `pypi` environment. On a tag, the build fails unless the tag is `v` plus the `pyproject.toml` version.
+  - `id-token: write` is granted only to the two publish jobs. The environments were created with `gh`, and their deployment policies accept only `main` (`testpypi`) and `v*` tags (`pypi`).
+  - `scripts/publish.sh` (D-036's token path) is deleted, so there is one way to publish.
+- **Why:** no token ever exists to paste, store or leak, and every release is built in CI from a tagged commit, with PyPI attestations.
+- **Consequences:** the owner adds one pending publisher per index (owner `MYoussef885`, repo `cigar-break`, workflow `release.yml`, environment `testpypi` or `pypi`). The `v0.1.0` tag pushed at "go public" publishes to PyPI. The demo GIF is postponed until after launch (owner, 2026-10-29), so the README no longer shows it.

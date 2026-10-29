@@ -32,7 +32,7 @@ If Claude doesn't call `take_break` by itself after the nudge, auto mode never c
 
 - macOS: Cmd-Shift-5, "Record Selected Portion", around the terminal window. Then convert to a GIF under 8 MB, for example `ffmpeg -i demo.mov -vf "fps=12,scale=1100:-1:flags=lanczos" -loop 0 docs/demo.gif` (or `gifski --fps 12 --width 1100 -o docs/demo.gif demo.mov`).
 - Speed up the "Claude works" stretch to 2× if the run is longer than 30 seconds; keep the clear-and-restore part at normal speed.
-- Save it as `docs/demo.gif`; the README already points there.
+- Save it as `docs/demo.gif`, then add `![Cigar's auto break in the terminal](docs/demo.gif)` to the README, above "In auto mode" (it was taken out while the GIF is postponed, D-038).
 
 ## Afterwards
 
