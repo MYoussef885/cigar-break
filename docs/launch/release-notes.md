@@ -17,4 +17,4 @@ Standalone MCP server for other agents: `pip install cigar-break`, then run `cig
 - Opt-in, allowlisted curve sharing through a prefilled GitHub issue: `cigar share`.
 - `cigar.track` for custom Python agent loops.
 
-**Verified setups:** see the README. Requires Python 3.11+ (found even when `python3` is older). MIT license.
+**Verified setups:** see the README. Requires Python 3.11+ (found even when `python3` is older). Code: MIT. Shared curves in `data/curves/`: CC0-1.0.
