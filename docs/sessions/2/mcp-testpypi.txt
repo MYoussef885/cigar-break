@@ -1,0 +1,15 @@
+$ uv venv --python 3.11 <scratch>/venv
+$ VIRTUAL_ENV=<scratch>/venv uv pip install --no-cache --index-url https://test.pypi.org/simple/ cigar-break==0.1.0   (TestPyPI only, no other index)
+ + cigar-break==0.1.0   (Requires: none)
+   published by Release run https://github.com/MYoussef885/cigar-break/actions/runs/40884321464 (trusted publishing, D-038) from main at 9fb219c
+$ uv run python scripts/check_mcp_client.py -- <scratch>/venv/bin/cigar-mcp
+client: official MCP Python SDK 2.3.0; server: <scratch>/venv/bin/cigar-mcp
+  initialize: cigar 0.1.0, protocol 2025-11-25
+  tools/list: record_event, resume, status, take_break
+  record_event #1 at 60k: break_suggested=False signals={}
+  record_event #2 at 61k: break_suggested=False signals={'reread': 1}
+  record_event #3 at 150k: break_suggested=True signals={'reread': 2}
+  take_break: Handoff saved to .cigar/handoffs/2026-10-29T1643-sdk-.md
+  resume: Latest handoff (.cigar/handoffs/2026-10-29T1643-sdk-.md):
+  status: Cigar status · session sdk-chec · mode suggest
+  ping: ok

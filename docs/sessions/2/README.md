@@ -9,7 +9,7 @@ Dates are 2026-10-26, on macOS 26.0.1 (Apple M4) with Claude Code 2.1.309. Scrat
 | Fresh install in a clean temp `HOME`, two commands | ⏳ GitHub run after the public step | [fresh-install-local.txt](fresh-install-local.txt): both commands, inventory, MCP health, hooks, and the only-old-`python3` case (one warning, no errors), from a local-path marketplace. `scripts/fresh_install_check.sh MYoussef885/cigar-break` repeats it from GitHub. |
 | `/cigar:report` from simulated data, and real data if it exists; desktop screenshot | ✅ simulated (checklist step 3, from the screenshot); ⏳ real | [report-simulated.txt](report-simulated.txt), [report-simulated.html](report-simulated.html), [report-desktop.png](report-desktop.png) (1440 px). There is still no `~/.cigar/` on this machine (re-checked 2026-10-29), so there is no real data to report; the empty-store report is covered by `tests/test_report.py::test_empty_report`. |
 | `cigar share --dry-run` prints a payload with no paths, project names or code | ✅ | [share-dry-run.txt](share-dry-run.txt); `tests/test_share.py::test_payload_contains_no_paths_projects_or_ids` feeds real hook events with paths, a named project folder and session IDs, and checks none of them appear in the payload or the issue URL |
-| MCP server outside the plugin from a PyPI (or TestPyPI) install | ✅ wheel; ⏳ TestPyPI | [mcp-standalone.txt](mcp-standalone.txt): the built wheel in a clean venv, driven by the official MCP Python SDK 2.3.0 client. CI's `package` job repeats it on Ubuntu. Publishing is trusted publishing from [release.yml](../../../.github/workflows/release.yml) (D-038), waiting on owner stop 1. |
+| MCP server outside the plugin from a PyPI (or TestPyPI) install | ✅ TestPyPI; ⏳ PyPI at the `v0.1.0` tag | [mcp-testpypi.txt](mcp-testpypi.txt) (2026-10-29): `cigar-break==0.1.0` installed from TestPyPI alone into a clean Python 3.11 venv, driven by the official MCP Python SDK 2.3.0 client; all steps pass. Published by trusted publishing from [release.yml](../../../.github/workflows/release.yml) (D-038), [run 40884321464](https://github.com/MYoussef885/cigar-break/actions/runs/40884321464). Earlier: [mcp-standalone.txt](mcp-standalone.txt) (the local wheel), and CI's `package` job on Ubuntu. |
 | Repo public, `v0.1.0` tagged, launch drafts | ⏳ stop 2; drafts ✅ | [docs/launch/](../../launch/) |
 | VS Code panel checklist (D-026) | ⏳ owner | Below |
 | Demo GIF | ⏳ postponed until after launch (owner, 2026-10-29) | [docs/demo-script.md](../../demo-script.md); the README no longer shows it |
@@ -51,7 +51,7 @@ Reply with what passed, or paste what differed. Afterwards: `rm -rf ~/cigar-vsco
 
 ## Owner stops (one action each)
 
-1. **Trusted publishing (D-038), no tokens.** Add a *pending publisher* on test.pypi.org and on pypi.org (Account settings → Publishing → "Add a new pending publisher" → GitHub):
+1. ✅ **Done 2026-10-29.** **Trusted publishing (D-038), no tokens.** Add a *pending publisher* on test.pypi.org and on pypi.org (Account settings → Publishing → "Add a new pending publisher" → GitHub):
 
    | Field | test.pypi.org | pypi.org |
    |---|---|---|
