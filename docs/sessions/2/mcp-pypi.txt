@@ -1,0 +1,19 @@
+# 2026-10-29: cigar-break 0.1.0 from PyPI, published from tag v0.1.0 (bf452b4) by trusted publishing (D-038)
+# Release run https://github.com/MYoussef885/cigar-break/actions/runs/40885774066 (attempt 1 failed before upload: Sigstore Rekor HTTP 502 while signing attestations; attempt 2 passed)
+$ curl https://pypi.org/simple/cigar-break/   (files)
+  cigar_break-0.1.0-py3-none-any.whl sha256:f4cef1c2b6a17300 provenance: yes
+  cigar_break-0.1.0.tar.gz sha256:501e35ac31d8cf53 provenance: yes
+$ uv venv --python 3.11 <scratch>/venv
+$ VIRTUAL_ENV=<scratch>/venv uv pip install --no-cache --index-url https://pypi.org/simple/ cigar-break==0.1.0
+ + cigar-break==0.1.0   (Requires: none)
+$ uv run python scripts/check_mcp_client.py -- <scratch>/venv/bin/cigar-mcp
+client: official MCP Python SDK 2.3.0; server: <scratch>/venv/bin/cigar-mcp
+  initialize: cigar 0.1.0, protocol 2025-11-25
+  tools/list: record_event, resume, status, take_break
+  record_event #1 at 60k: break_suggested=False signals={}
+  record_event #2 at 61k: break_suggested=False signals={'reread': 1}
+  record_event #3 at 150k: break_suggested=True signals={'reread': 2}
+  take_break: Handoff saved to .cigar/handoffs/2026-10-29T1654-sdk-.md
+  resume: Latest handoff (.cigar/handoffs/2026-10-29T1654-sdk-.md):
+  status: Cigar status · session sdk-chec · mode suggest
+  ping: ok
