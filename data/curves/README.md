@@ -44,3 +44,7 @@ Example:
 ```
 
 Buckets with few events may be dropped when a payload is too long for a prefilled issue URL.
+
+## License
+
+The curves in this folder are published under [CC0-1.0](LICENSE): anyone may use them for any purpose, without attribution. Cigar's code is MIT (D-037).

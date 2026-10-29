@@ -22,5 +22,5 @@ body:
     attributes:
       label: Consent
       options:
-        - label: I reviewed the payload and agree to publish it in this public repository (data/curves/), under the repository's license.
+        - label: I reviewed the payload and agree to publish it in this public repository (data/curves/), dedicated to the public domain under CC0-1.0.
           required: true

@@ -319,3 +319,12 @@ Check each one on the owner's machine and record what is true:
   - Install syntax was verified on 2.1.309 as the CLI forms of the two slash commands: `claude plugin marketplace add <source>` then `claude plugin install cigar@cigar-break`. The slash forms inside a session are in the owner's checklist.
   - The validator also suggests a one-step `/plugin install cigar --marketplace MYoussef885/cigar-break` (2.1.275+). It is untested, so it's not in the README.
   - `scripts/publish.sh` reads the token without echo; nothing is stored.
+
+**D-037 · Session 2 rulings.** 2026-10-29 · Accepted (Claude Chat review)
+- **D-028 to D-036 are accepted.**
+- **D-032's open question:** shared curves in `data/curves/` are published under CC0-1.0, not MIT. The code stays MIT.
+  - `data/curves/LICENSE` holds the CC0-1.0 legal code (the canonical text from creativecommons.org).
+  - The consent line in `.github/ISSUE_TEMPLATE/curve.yml` and the new License section of `data/curves/README.md` say CC0-1.0.
+  - The README's sharing section has one line about it, and its License section names both licenses.
+- **D-029:** the event retention window is listed under Later in `roadmap.md`.
+- **D-030 is accepted:** CI prints the 150 ms performance target but doesn't assert it; NFR-2 is measured on the owner's machine (`docs/sessions/2/perf.txt`).

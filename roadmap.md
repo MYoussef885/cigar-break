@@ -101,6 +101,7 @@
 - A submission to Anthropic's plugin directory.
 - A `$.model.fork` handoff fallback: the mod drafts the handoff from the live conversation when the agent ignores the nudge (D-026).
 - Auto mode in the VS Code panel, once it is tested there (D-026).
+- An event retention window, so the SessionStart knee refit stays fast after a year of heavy use (D-029, D-037).
 
 ---
 

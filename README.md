@@ -70,6 +70,8 @@ The same is available outside Claude Code as `cigar status`, `cigar report [--ht
 
 Where agents get tired is an open question, and every developer's sessions are a data point. `cigar share` (or `/cigar:share`) shows you the **exact** payload first: one model ID, its context window label (`200k` or `1m`), counts and signal weight per 10k-token bucket, the knee and its confidence, the number of sessions, and the Cigar version. No paths, project names, code, prompts or user identifiers; a strict allowlist check runs before anything is shown. If you confirm, it opens a prefilled issue on this repo. Accepted curves are published in [`data/curves/`](data/curves/README.md) for anyone to use. `cigar share --dry-run` just prints the payload.
 
+Shared curves are published under [CC0-1.0](data/curves/LICENSE) (public domain), not the code's MIT license.
+
 ## Other agents
 
 **Standalone MCP server.** `pip install cigar-break` installs `cigar-mcp`, a stdio MCP server with `take_break`, `resume`, `status` and `record_event`. Agents without Claude Code's hooks call `record_event` after each tool call to get detection, and `take_break`/`resume` for handoffs. Tested with the official MCP Python SDK client (`scripts/check_mcp_client.py`); other clients have not been tested yet.
@@ -150,4 +152,4 @@ Design notes live in [`SRS.md`](SRS.md), [`architecture.md`](architecture.md) an
 
 ## License
 
-MIT
+Code: MIT. Shared curves in `data/curves/`: CC0-1.0.
